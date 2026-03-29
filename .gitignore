@@ -1,3 +1,19 @@
+# Build artifacts
+dash
+*.exe
+dist/
+
+# Go caches
 .cache/
 .gocache/
 .gomodcache/
+
+# Local config and secrets
+config.json
+.env
+.env.*
+
+# Editor
+.idea/
+.vscode/
+*.swp
