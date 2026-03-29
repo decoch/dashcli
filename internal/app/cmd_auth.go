@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -10,6 +11,13 @@ import (
 
 	"github.com/decoch/dashcli/internal/exitcode"
 	"github.com/decoch/dashcli/internal/secrets"
+)
+
+var (
+	authSetSecret              = secrets.Set
+	authGetSecret              = secrets.Get
+	authDeleteSecret           = secrets.Delete
+	authInput        io.Reader = os.Stdin
 )
 
 func newAuthCmd(state *appState) *cobra.Command {
@@ -24,10 +32,10 @@ func newAuthCmd(state *appState) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profile := profileNameFromGlobalFlag(state.flags.Profile)
 			var apiKey string
-			if _, err := fmt.Fscan(os.Stdin, &apiKey); err != nil {
+			if _, err := fmt.Fscan(authInput, &apiKey); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
-			if err := secrets.Set(profile, strings.TrimSpace(apiKey)); err != nil {
+			if err := authSetSecret(profile, strings.TrimSpace(apiKey)); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
 			if err := state.output().PrintText("API key stored for profile %s\n", profile); err != nil {
@@ -42,7 +50,7 @@ func newAuthCmd(state *appState) *cobra.Command {
 		Short: "Delete API key for profile",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profile := profileNameFromGlobalFlag(state.flags.Profile)
-			if err := secrets.Delete(profile); err != nil {
+			if err := authDeleteSecret(profile); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
 			if err := state.output().PrintText("API key removed for profile %s\n", profile); err != nil {
@@ -57,7 +65,7 @@ func newAuthCmd(state *appState) *cobra.Command {
 		Short: "Show API key status for profile",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			profile := profileNameFromGlobalFlag(state.flags.Profile)
-			_, err := secrets.Get(profile)
+			_, err := authGetSecret(profile)
 			if err == nil {
 				if printErr := state.output().PrintText("API key is set for profile %s\n", profile); printErr != nil {
 					return exitcode.WrapRuntime(printErr)
