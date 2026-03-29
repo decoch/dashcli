@@ -13,4 +13,3 @@ func (client *Client) Me(ctx context.Context) (map[string]any, error) {
 
 	return client.getObject(ctx, "/api/users/me")
 }
-

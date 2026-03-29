@@ -59,4 +59,3 @@ func (out *Output) Errorf(format string, args ...any) {
 	}
 	_, _ = fmt.Fprintf(out.stderr, format+"\n", args...)
 }
-

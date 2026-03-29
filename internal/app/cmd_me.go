@@ -41,4 +41,3 @@ func newMeCmd(state *appState) *cobra.Command {
 		},
 	}
 }
-

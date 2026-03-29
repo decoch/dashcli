@@ -18,4 +18,3 @@ func runMain(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 func main() {
 	os.Exit(runMain(context.Background(), os.Args[1:], os.Stdout, os.Stderr))
 }
-

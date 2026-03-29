@@ -10,12 +10,12 @@ lint:
 	golangci-lint run ./...
 
 fmt:
-	gofumpt -w .
+	gofmt -w $(shell git ls-files '*.go')
 
 fmt-check:
-	@output="$$(gofumpt -l .)"; \
+	@output="$$(gofmt -l $(shell git ls-files '*.go'))"; \
 	if [ -n "$$output" ]; then \
-		echo "Files not formatted with gofumpt:"; \
+		echo "Files not formatted with gofmt:"; \
 		echo "$$output"; \
 		exit 1; \
 	fi

@@ -14,7 +14,3 @@ linters:
     - unused
     - gosec
 
-formatters:
-  enable:
-    - gofumpt
-
