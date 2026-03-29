@@ -9,6 +9,8 @@ cmd/dash/
 internal/app/
   run.go                  # Run(ctx, args, stdout, stderr) int
   root.go                 # root command + global flags
+  cmd_version.go          # version subcommand
+  cmd_me.go               # current-user subcommand
   cmd_query.go            # query subcommands
   cmd_dashboard.go        # dashboard subcommands
   cmd_datasource.go       # datasource subcommands
@@ -16,6 +18,7 @@ internal/app/
 
 internal/redash/
   client.go               # HTTP client + auth transport
+  me.go                   # current-user API wrapper
   queries.go              # /api/queries
   dashboards.go           # /api/dashboards
   jobs.go                 # /api/jobs
@@ -50,6 +53,8 @@ internal/exitcode/
 
 - Keep global flag design explicit (output mode, verbose, auth-related)
 - Treat machine-readable output as first-class
+- Keep entrypoint minimal and route behavior through a testable internal runner
+- Centralize error formatting and map domain errors to stable exit codes
 
 ### From `sonoscli`
 
