@@ -65,6 +65,10 @@ func (client *Client) postObject(ctx context.Context, path string, body any) (ma
 	return response, nil
 }
 
+func (client *Client) deleteObject(ctx context.Context, path string) error {
+	return client.doJSON(ctx, http.MethodDelete, path, nil, nil)
+}
+
 func (client *Client) getList(ctx context.Context, path string) ([]map[string]any, error) {
 	var raw any
 	if err := client.doJSON(ctx, http.MethodGet, path, nil, &raw); err != nil {
@@ -73,10 +77,22 @@ func (client *Client) getList(ctx context.Context, path string) ([]map[string]an
 	return normalizeList(raw), nil
 }
 
+func (client *Client) getListWithParams(ctx context.Context, path string, params url.Values) ([]map[string]any, error) {
+	var raw any
+	if err := client.doJSONWithParams(ctx, http.MethodGet, path, params, nil, &raw); err != nil {
+		return nil, err
+	}
+	return normalizeList(raw), nil
+}
+
 func (client *Client) doJSON(ctx context.Context, method, path string, requestBody any, responseBody any) error {
-	requestURL, err := url.JoinPath(client.baseURL, strings.TrimLeft(path, "/"))
+	return client.doJSONWithParams(ctx, method, path, nil, requestBody, responseBody)
+}
+
+func (client *Client) doJSONWithParams(ctx context.Context, method, path string, params url.Values, requestBody any, responseBody any) error {
+	requestURL, err := client.buildRequestURL(path, params)
 	if err != nil {
-		return fmt.Errorf("build request URL: %w", err)
+		return err
 	}
 
 	var bodyReader io.Reader
@@ -121,6 +137,23 @@ func (client *Client) doJSON(ctx context.Context, method, path string, requestBo
 		return fmt.Errorf("parse response body: %w", err)
 	}
 	return nil
+}
+
+func (client *Client) buildRequestURL(path string, params url.Values) (string, error) {
+	requestURL, err := url.JoinPath(client.baseURL, strings.TrimLeft(path, "/"))
+	if err != nil {
+		return "", fmt.Errorf("build request URL: %w", err)
+	}
+	if len(params) == 0 {
+		return requestURL, nil
+	}
+
+	parsed, err := url.Parse(requestURL)
+	if err != nil {
+		return "", fmt.Errorf("parse request URL: %w", err)
+	}
+	parsed.RawQuery = params.Encode()
+	return parsed.String(), nil
 }
 
 func parseAPIError(statusCode int, payload []byte) error {

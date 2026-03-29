@@ -3,6 +3,7 @@ package redash
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"testing"
@@ -23,6 +24,7 @@ func TestListQueries_AuthorizationHeaderAndResults(t *testing.T) {
 
 	var gotAuth string
 	var gotPath string
+	var gotQuery string
 
 	client, err := NewClient("https://redash.example.com", "test-key", time.Second, false)
 	if err != nil {
@@ -31,10 +33,11 @@ func TestListQueries_AuthorizationHeaderAndResults(t *testing.T) {
 	client.httpClient = &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
 		gotAuth = request.Header.Get("Authorization")
 		gotPath = request.URL.Path
+		gotQuery = request.URL.RawQuery
 		return jsonResponse(http.StatusOK, `{"results":[{"id":1,"name":"Q1"}]}`), nil
 	})}
 
-	queries, err := client.ListQueries(context.Background())
+	queries, err := client.ListQueries(context.Background(), 1, 20, "-updated_at", "name")
 	if err != nil {
 		t.Fatalf("ListQueries() error = %v", err)
 	}
@@ -46,6 +49,75 @@ func TestListQueries_AuthorizationHeaderAndResults(t *testing.T) {
 	}
 	if gotPath != "/api/queries" {
 		t.Fatalf("Path = %q, want %q", gotPath, "/api/queries")
+	}
+	if gotQuery != "order=-updated_at&page=1&page_size=20&search=name" {
+		t.Fatalf("Query = %q, want %q", gotQuery, "order=-updated_at&page=1&page_size=20&search=name")
+	}
+}
+
+func TestArchiveQuery_UsesDelete(t *testing.T) {
+	t.Parallel()
+
+	var gotMethod string
+	var gotPath string
+
+	client, err := NewClient("https://redash.example.com", "", time.Second, false)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	client.httpClient = &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		gotMethod = request.Method
+		gotPath = request.URL.Path
+		return jsonResponse(http.StatusNoContent, ``), nil
+	})}
+
+	if err := client.ArchiveQuery(context.Background(), "123"); err != nil {
+		t.Fatalf("ArchiveQuery() error = %v", err)
+	}
+	if gotMethod != http.MethodDelete {
+		t.Fatalf("Method = %q, want %q", gotMethod, http.MethodDelete)
+	}
+	if gotPath != "/api/queries/123" {
+		t.Fatalf("Path = %q, want %q", gotPath, "/api/queries/123")
+	}
+}
+
+func TestExecuteSQL_RequestBody(t *testing.T) {
+	t.Parallel()
+
+	var gotPath string
+	var requestBody map[string]any
+
+	client, err := NewClient("https://redash.example.com", "", time.Second, false)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	client.httpClient = &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		gotPath = request.URL.Path
+		if err := json.NewDecoder(request.Body).Decode(&requestBody); err != nil {
+			t.Fatalf("Decode() error = %v", err)
+		}
+		return jsonResponse(http.StatusOK, `{"query_result":{"id":1}}`), nil
+	})}
+
+	response, err := client.ExecuteSQL(context.Background(), 9, "select 1", 10)
+	if err != nil {
+		t.Fatalf("ExecuteSQL() error = %v", err)
+	}
+	if gotPath != "/api/query_results" {
+		t.Fatalf("Path = %q, want %q", gotPath, "/api/query_results")
+	}
+	if requestBody["query"] != "select 1" {
+		t.Fatalf("query = %v, want %v", requestBody["query"], "select 1")
+	}
+	if requestBody["data_source_id"] != float64(9) {
+		t.Fatalf("data_source_id = %v, want %v", requestBody["data_source_id"], float64(9))
+	}
+	if requestBody["max_age"] != float64(10) {
+		t.Fatalf("max_age = %v, want %v", requestBody["max_age"], float64(10))
+	}
+	if _, ok := response["query_result"]; !ok {
+		t.Fatalf("response = %v, want query_result field", response)
 	}
 }
 
