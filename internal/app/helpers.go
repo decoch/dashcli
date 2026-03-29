@@ -72,20 +72,6 @@ func asInt(value any) (int, bool) {
 	}
 }
 
-func asBoolString(value any) string {
-	switch typed := value.(type) {
-	case bool:
-		if typed {
-			return "true"
-		}
-		return "false"
-	case string:
-		return typed
-	default:
-		return asString(value)
-	}
-}
-
 func extractJobObject(response map[string]any) map[string]any {
 	if response == nil {
 		return nil
