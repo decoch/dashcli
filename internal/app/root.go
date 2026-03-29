@@ -2,10 +2,13 @@ package app
 
 import (
 	"io"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"github.com/decoch/dashcli/internal/config"
+	"github.com/decoch/dashcli/internal/exitcode"
 	"github.com/decoch/dashcli/internal/output"
 )
 
@@ -19,9 +22,10 @@ type rootFlags struct {
 }
 
 type appState struct {
-	flags  *rootFlags
-	stdout io.Writer
-	stderr io.Writer
+	flags    *rootFlags
+	resolved config.Resolved
+	stdout   io.Writer
+	stderr   io.Writer
 }
 
 func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
@@ -37,6 +41,31 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 		Short:         "CLI for Redash API",
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Name() == "version" {
+				return nil
+			}
+			cfg, err := config.LoadDefault()
+			if err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+			resolved, err := config.Resolve(config.ResolveInput{
+				Flags: config.Flags{
+					BaseURL: state.flags.BaseURL,
+					APIKey:  state.flags.APIKey,
+					Profile: state.flags.Profile,
+					Timeout: state.flags.Timeout,
+					Debug:   state.flags.Debug,
+				},
+				Config:    cfg,
+				LookupEnv: os.LookupEnv,
+			})
+			if err != nil {
+				return exitcode.WrapUsage(err)
+			}
+			state.resolved = resolved
+			return nil
+		},
 	}
 
 	rootCmd.PersistentFlags().StringVar(&flags.BaseURL, "base-url", "", "Redash base URL")
@@ -58,4 +87,3 @@ func (state *appState) output() *output.Output {
 		Stderr: state.stderr,
 	})
 }
-
