@@ -76,6 +76,11 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&flags.Profile, "profile", "", "Profile name")
 
 	rootCmd.AddCommand(newVersionCmd(state))
+	rootCmd.AddCommand(newMeCmd(state))
+	rootCmd.AddCommand(newQueryCmd(state))
+	rootCmd.AddCommand(newJobCmd(state))
+	rootCmd.AddCommand(newDashboardCmd(state))
+	rootCmd.AddCommand(newDataSourceCmd(state))
 
 	return rootCmd
 }
