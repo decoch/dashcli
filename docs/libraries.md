@@ -14,6 +14,12 @@
 - Reason: strong built-in help and completion support
 - Reference: proven command-tree usage in `sonoscli`
 
+### `github.com/99designs/keyring`
+
+- Reason: secure API key storage in OS keychain/keyring
+- Reason: avoids leaking long-lived keys via shell history and process args
+- Reference: mature secret handling pattern in `gogcli`
+
 ### Standard library (`net/http`, `encoding/json`, `context`, `log/slog`)
 
 - Reason: the Redash API is REST + JSON, which standard packages handle well
@@ -22,12 +28,6 @@
 - Note: CLI flag parsing is handled by `cobra`/`pflag`, not Go's `flag` package directly
 
 ## Optional (need-based)
-
-### `github.com/99designs/keyring`
-
-- Use case: store API keys in OS keychain when required
-- Reference: mature secret handling in `gogcli`
-- Decision: not required for v0; add when plaintext config becomes unacceptable
 
 ### `github.com/stretchr/testify`
 
@@ -55,7 +55,8 @@
 
 ```text
 require (
-  github.com/spf13/cobra v1.8.1
+  github.com/spf13/cobra v1.10.2
+  github.com/99designs/keyring v1.2.2
 )
 ```
 

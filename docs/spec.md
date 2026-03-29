@@ -14,6 +14,10 @@ Design a Go-based Redash CLI (`dash`) with the following primary goals.
 - Do not build an interactive TUI
 - Do not over-optimize in ways that change behavior incompatibly
 
+## Language/runtime
+
+- Go `1.25+` (see `go.mod`)
+
 ## Reference repositories and extracted patterns
 
 This spec is based on the following repositories.
@@ -44,6 +48,9 @@ Extracted architecture patterns:
 ### Commands (first slice)
 
 - `dash version`
+- `dash auth set`
+- `dash auth delete`
+- `dash auth status`
 - `dash me`
 - `dash query list`
 - `dash query get <id>`
@@ -57,6 +64,8 @@ Extracted architecture patterns:
 ## API/auth and config policy
 
 - Use Redash API keys for authentication
+- Prefer keyring-backed secrets over command-line flags for local development
+- Reject `http://` base URLs to prevent plaintext API key transport
 
 Config file candidate:
 
@@ -88,15 +97,20 @@ Profile resolution rules:
 
 1. Selected profile name: `--profile` > `default_profile` > `default`
 2. Base URL: `--base-url` > `REDASH_BASE_URL` > selected profile `base_url`
-3. API key: `--api-key` > env var referenced by selected profile `api_key_env` > `REDASH_API_KEY`
+3. API key: `--api-key` > keyring secret for selected profile > env var referenced by selected profile `api_key_env` > `REDASH_API_KEY`
 
-This makes profile-specific credentials win by default, while `REDASH_API_KEY` remains a global fallback.
+If `--api-key` is used and wins resolution, print a warning on stderr about insecure CLI argument usage.
+
+This makes profile-specific keyring/env credentials win by default, while `REDASH_API_KEY` remains a global fallback.
 
 If the selected profile does not exist, exit with usage error (`2`).
 
 ## Command behavior notes
 
 - `dash version`: prints CLI binary version only and exits; it does not call Redash APIs.
+- `dash auth set`: reads API key from stdin and stores it in OS keyring for the selected profile (`default` when `--profile` is unset).
+- `dash auth delete`: removes API key from OS keyring for the selected profile.
+- `dash auth status`: prints whether API key exists for the selected profile; key-not-found is a normal success state.
 - `dash me`: calls the current-user endpoint and prints a compact user summary in text mode (`id`, `name`, `email`, `is_admin`); `--json` prints the API response payload.
 
 ## Output policy
@@ -114,9 +128,10 @@ If the selected profile does not exist, exit with usage error (`2`).
 - `internal/redash`: API contract tests with `httptest.Server`
 - `internal/app`: verify `Run(...)` I/O and exit codes
 - `internal/config`: verify precedence and profile resolution
+- `internal/secrets`: exercised by app/config integration paths (mocked in app tests)
 - `internal/output`: verify text/JSON rendering behavior and stable machine output
 
-## Deliverables for architecture phase
+## Project docs
 
 - `docs/architecture.md`: package layout and execution flow
 - `docs/libraries.md`: library selection (adopt / optional / reject)

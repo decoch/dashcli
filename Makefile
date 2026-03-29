@@ -1,7 +1,10 @@
-.PHONY: test lint fmt fmt-check ci
+.PHONY: test vet lint fmt fmt-check ci
 
 test:
 	go test ./...
+
+vet:
+	go vet ./...
 
 lint:
 	golangci-lint run ./...
@@ -10,7 +13,11 @@ fmt:
 	gofumpt -w .
 
 fmt-check:
-	gofumpt -l . | grep . && exit 1 || exit 0
+	@output="$$(gofumpt -l .)"; \
+	if [ -n "$$output" ]; then \
+		echo "Files not formatted with gofumpt:"; \
+		echo "$$output"; \
+		exit 1; \
+	fi
 
-ci: fmt-check lint test
-
+ci: fmt-check vet lint test

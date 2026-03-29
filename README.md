@@ -25,13 +25,15 @@ It is designed for script-friendly automation, clear command behavior, and secur
 
 Run `dash --help` for full command and flag documentation.
 
+`dash auth ...` commands work without `--base-url` because they operate on local keyring state.
+
 ## Installation
 
 ### Build from source
 
 Requirements:
 
-- Go 1.22+
+- Go 1.25+
 
 ```bash
 git clone https://github.com/decoch/dashcli.git
