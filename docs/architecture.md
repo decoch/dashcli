@@ -38,7 +38,7 @@ internal/exitcode/
 
 ## 2. Execution flow
 
-1. `cmd/dash/main.go` calls `app.Run(...)`
+1. `cmd/dashcli/main.go` calls `app.Run(...)`
 2. `internal/app` parses flags and resolves credentials (`flag > keyring > env`)
 3. `internal/secrets` provides keyring-backed `base_url` and `api_key`
 4. Build `internal/redash/client` (timeout, auth header)
@@ -46,7 +46,17 @@ internal/exitcode/
 6. `internal/output` renders text/json
 7. `internal/exitcode` maps and returns the exit code
 
-## 3. Error model
+## 3. Design principles
+
+- **Thin entrypoint**: `cmd/dashcli/main.go` only calls `app.Run(...)`. All logic lives under `internal/`.
+- **Testable runner**: `Run(ctx, args, stdout, stderr) int` makes the full CLI testable without subprocess invocation.
+- **Layered responsibility**: `internal/app` owns CLI concerns; `internal/redash` owns API concerns. Neither bleeds into the other.
+- **Explicit credential resolution**: flags → keyring → env, evaluated in order, with a warning when the insecure flag path wins.
+- **Machine-readable output as first-class**: every command supports `--json`; the shape is stable and script-friendly.
+- **Stable exit codes**: errors are classified at the boundary and mapped to fixed codes (0/1/2) before returning to the OS.
+- **Output isolation**: all rendering goes through `internal/output` so format behavior is consistent and easy to test.
+
+## 4. Error model
 
 - Usage error (missing required args, invalid flags)
 - API error (4xx/5xx + Redash error payload)
@@ -54,7 +64,7 @@ internal/exitcode/
 
 Normalize these into internal error types and map them to exit codes.
 
-## 4. Extensibility policy
+## 5. Extensibility policy
 
 - Add new APIs via `internal/redash/<resource>.go`
 - Add new command handlers via `internal/app/cmd_<resource>.go`
