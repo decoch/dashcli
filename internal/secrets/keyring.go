@@ -35,6 +35,7 @@ func Delete(profile string) error {
 
 func open() (keyring.Keyring, error) {
 	return keyring.Open(keyring.Config{
-		ServiceName: "dashcli",
+		ServiceName:     "dashcli",
+		AllowedBackends: keyring.AvailableBackends(),
 	})
 }
