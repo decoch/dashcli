@@ -61,8 +61,7 @@ func newAuthCmd(state *appState) *cobra.Command {
 			}
 			var apiKey string
 			if authInput == os.Stdin {
-				fd := int(os.Stdin.Fd())
-				raw, err := authReadPassword(fd)
+				raw, err := authReadPassword(0)
 				if err != nil {
 					return exitcode.WrapRuntime(err)
 				}

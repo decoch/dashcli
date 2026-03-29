@@ -118,7 +118,9 @@ func (client *Client) doJSONWithParams(ctx context.Context, method, path string,
 	if err != nil {
 		return fmt.Errorf("do request: %w", err)
 	}
-	defer response.Body.Close()
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
 	payload, err := io.ReadAll(response.Body)
 	if err != nil {
