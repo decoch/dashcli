@@ -14,11 +14,12 @@
 - Reason: strong built-in help and completion support
 - Reference: proven command-tree usage in `sonoscli`
 
-### Standard library (`net/http`, `encoding/json`, `flag` helpers, `context`, `slog`)
+### Standard library (`net/http`, `encoding/json`, `context`, `log/slog`)
 
 - Reason: the Redash API is REST + JSON, which standard packages handle well
 - Reason: fewer dependencies reduce maintenance cost
 - Reference: `blucli` runs stably with a lean dependency set
+- Note: CLI flag parsing is handled by `cobra`/`pflag`, not Go's `flag` package directly
 
 ## Optional (need-based)
 
