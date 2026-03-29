@@ -1,11 +1,17 @@
 package app
 
 import (
+	"context"
 	"time"
 
 	"github.com/decoch/dashcli/internal/exitcode"
+	"github.com/decoch/dashcli/internal/redash"
 	"github.com/spf13/cobra"
 )
+
+var jobGetJob = func(ctx context.Context, client *redash.Client, id string) (map[string]any, error) {
+	return client.GetJob(ctx, id)
+}
 
 func newJobCmd(state *appState) *cobra.Command {
 	jobCmd := &cobra.Command{
@@ -22,7 +28,7 @@ func newJobCmd(state *appState) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			jobResponse, err := client.GetJob(cmd.Context(), args[0])
+			jobResponse, err := jobGetJob(cmd.Context(), client, args[0])
 			if err != nil {
 				return exitcode.WrapRuntime(err)
 			}
@@ -67,7 +73,7 @@ func newJobCmd(state *appState) *cobra.Command {
 
 			deadline := time.Now().Add(maxWait)
 			for {
-				jobResponse, err := client.GetJob(cmd.Context(), args[0])
+				jobResponse, err := jobGetJob(cmd.Context(), client, args[0])
 				if err != nil {
 					return exitcode.WrapRuntime(err)
 				}

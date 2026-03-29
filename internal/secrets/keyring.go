@@ -7,6 +7,13 @@ const (
 	keyBaseURL = "base_url"
 )
 
+var openKeyring = func() (keyring.Keyring, error) {
+	return keyring.Open(keyring.Config{
+		ServiceName:     "dashcli",
+		AllowedBackends: keyring.AvailableBackends(),
+	})
+}
+
 func SetAPIKey(apiKey string) error {
 	return setValue(keyAPIKey, apiKey)
 }
@@ -32,7 +39,7 @@ func DeleteBaseURL() error {
 }
 
 func setValue(key, value string) error {
-	ring, err := open()
+	ring, err := openKeyring()
 	if err != nil {
 		return err
 	}
@@ -43,7 +50,7 @@ func setValue(key, value string) error {
 }
 
 func getValue(key string) (string, error) {
-	ring, err := open()
+	ring, err := openKeyring()
 	if err != nil {
 		return "", err
 	}
@@ -55,16 +62,9 @@ func getValue(key string) (string, error) {
 }
 
 func deleteValue(key string) error {
-	ring, err := open()
+	ring, err := openKeyring()
 	if err != nil {
 		return err
 	}
 	return ring.Remove(key)
-}
-
-func open() (keyring.Keyring, error) {
-	return keyring.Open(keyring.Config{
-		ServiceName:     "dashcli",
-		AllowedBackends: keyring.AvailableBackends(),
-	})
 }

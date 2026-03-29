@@ -2,7 +2,7 @@
 
 ## Goal
 
-Design a Go-based Redash CLI (`dash`) with the following primary goals.
+Design a Go-based Redash CLI (`dashcli`) with the following primary goals.
 
 - Provide a stable CLI for calling the Redash API
 - Standardize script-friendly JSON output

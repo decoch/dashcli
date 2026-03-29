@@ -140,11 +140,7 @@ CI runs on pushes and pull requests to `main`.
 
 ## Contributing
 
-Issues and pull requests are welcome.
-
-- Keep changes focused and minimal.
-- Add/update tests for behavior changes.
-- Run `make ci` before submitting.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, coding conventions, and the PR process.
 
 ## License
 
