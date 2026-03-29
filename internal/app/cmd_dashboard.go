@@ -11,15 +11,32 @@ func newDashboardCmd(state *appState) *cobra.Command {
 		Short: "Manage dashboards",
 	}
 
-	dashboardCmd.AddCommand(&cobra.Command{
+	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List dashboards",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			page, err := cmd.Flags().GetInt("page")
+			if err != nil {
+				return exitcode.WrapUsage(err)
+			}
+			pageSize, err := cmd.Flags().GetInt("page-size")
+			if err != nil {
+				return exitcode.WrapUsage(err)
+			}
+			order, err := cmd.Flags().GetString("order")
+			if err != nil {
+				return exitcode.WrapUsage(err)
+			}
+			search, err := cmd.Flags().GetString("search")
+			if err != nil {
+				return exitcode.WrapUsage(err)
+			}
+
 			client, err := state.apiClient()
 			if err != nil {
 				return err
 			}
-			dashboards, err := client.ListDashboards(cmd.Context())
+			dashboards, err := client.ListDashboards(cmd.Context(), page, pageSize, order, search)
 			if err != nil {
 				return exitcode.WrapRuntime(err)
 			}
@@ -35,7 +52,12 @@ func newDashboardCmd(state *appState) *cobra.Command {
 			}
 			return nil
 		},
-	})
+	}
+	listCmd.Flags().Int("page", 1, "Page number")
+	listCmd.Flags().Int("page-size", 20, "Results per page")
+	listCmd.Flags().String("order", "-updated_at", "Sort order")
+	listCmd.Flags().String("search", "", "Filter by dashboard name")
+	dashboardCmd.AddCommand(listCmd)
 
 	dashboardCmd.AddCommand(&cobra.Command{
 		Use:   "get <slug-or-id>",
@@ -70,4 +92,3 @@ func newDashboardCmd(state *appState) *cobra.Command {
 
 	return dashboardCmd
 }
-

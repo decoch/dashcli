@@ -37,6 +37,25 @@ func newDataSourceCmd(state *appState) *cobra.Command {
 		},
 	})
 
+	dataSourceCmd.AddCommand(&cobra.Command{
+		Use:   "schema <id>",
+		Short: "Get data source schema",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := state.apiClient()
+			if err != nil {
+				return err
+			}
+			schema, err := client.GetDataSourceSchema(cmd.Context(), args[0])
+			if err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+			if err := state.output().Print(schema); err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+			return nil
+		},
+	})
+
 	return dataSourceCmd
 }
-
