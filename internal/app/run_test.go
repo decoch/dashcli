@@ -29,4 +29,3 @@ func TestRun_Version(t *testing.T) {
 		t.Fatalf("stderr = %q, want empty", stderr.String())
 	}
 }
-
