@@ -74,6 +74,7 @@ Config file candidate:
 ### Profile behavior (`--profile`)
 
 Profiles allow switching Redash environments (for example: `prod`, `stg`) without rewriting flags.
+Profiles are intended for users who operate multiple Redash instances (for example, different companies or teams). A single-instance setup does not require profiles.
 
 Proposed config shape:
 

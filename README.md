@@ -77,58 +77,53 @@ sudo mv dash /usr/local/bin/
 
 ## Quick Start
 
-1. Create the config file first.
-
-Config file path:
-
-- macOS: `~/Library/Application Support/dashcli/config.json`
-- Linux: `~/.config/dashcli/config.json`
-
-macOS:
+### Quick Start (single Redash instance)
 
 ```bash
-mkdir -p "$HOME/Library/Application Support/dashcli"
-cat > "$HOME/Library/Application Support/dashcli/config.json" <<'JSON'
+# 1. Create config file
+#    macOS:  ~/Library/Application Support/dashcli/config.json
+#    Linux:  ~/.config/dashcli/config.json
 {
-  "default_profile": "prod",
-  "profiles": {
-    "prod": {
-      "base_url": "https://your-redash.example.com"
-    }
-  }
+  "base_url": "https://your-redash.example.com"
 }
-JSON
-```
 
-Linux:
-
-```bash
-mkdir -p "$HOME/.config/dashcli"
-cat > "$HOME/.config/dashcli/config.json" <<'JSON'
-{
-  "default_profile": "prod",
-  "profiles": {
-    "prod": {
-      "base_url": "https://your-redash.example.com"
-    }
-  }
-}
-JSON
-```
-
-2. Store API key in keyring:
-
-```bash
-dash auth set --profile prod
+# 2. Store API key in keyring
+dash auth set
 # You will be prompted to enter your API key securely.
-```
 
-3. Use commands without repeating `--base-url`:
-
-```bash
+# 3. Use
 dash me
 dash query list
 dash --json datasource list
+```
+
+### Advanced: multiple Redash instances
+
+Use `--profile` to switch between instances (e.g. different companies or teams).
+
+Config:
+
+```json
+{
+  "default_profile": "projectA",
+  "profiles": {
+    "projectA": { "base_url": "https://redash.projecta.com" },
+    "projectB": { "base_url": "https://redash.projectb.com" }
+  }
+}
+```
+
+Store keys per profile:
+
+```bash
+dash auth set --profile projectA
+dash auth set --profile projectB
+```
+
+Switch:
+
+```bash
+dash --profile projectB query list
 ```
 
 ## Authentication and Configuration
@@ -159,20 +154,22 @@ dash --json datasource list
 - macOS: `~/Library/Application Support/dashcli/config.json`
 - Linux: `~/.config/dashcli/config.json`
 
-Example:
+Simple (single instance):
 
 ```json
 {
-  "default_profile": "prod",
+  "base_url": "https://your-redash.example.com"
+}
+```
+
+With profiles (multiple instances):
+
+```json
+{
+  "default_profile": "projectA",
   "profiles": {
-    "prod": {
-      "base_url": "https://redash.example.com",
-      "api_key_env": "REDASH_API_KEY_PROD"
-    },
-    "stg": {
-      "base_url": "https://redash-stg.example.com",
-      "api_key_env": "REDASH_API_KEY_STG"
-    }
+    "projectA": { "base_url": "https://redash.projecta.com" },
+    "projectB": { "base_url": "https://redash.projectb.com" }
   }
 }
 ```
