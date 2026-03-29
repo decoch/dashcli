@@ -43,15 +43,15 @@ Requirements:
 ```bash
 git clone https://github.com/decoch/dashcli.git
 cd dashcli
-go build -o dash ./cmd/dash
-./dash version
+go build -o dashcli ./cmd/dashcli
+./dashcli version
 ```
 
 ### Install via `go install`
 
 ```bash
-go install github.com/decoch/dashcli/cmd/dash@latest
-dash version
+go install github.com/decoch/dashcli/cmd/dashcli@latest
+dashcli version
 ```
 
 ### Download binary (recommended)
@@ -63,35 +63,35 @@ macOS (Apple Silicon):
 
 ```bash
 curl -L https://github.com/decoch/dashcli/releases/latest/download/dashcli_Darwin_arm64.tar.gz | tar xz
-sudo mv dash /usr/local/bin/
+sudo mv dashcli /usr/local/bin/
 ```
 
 macOS (Intel):
 
 ```bash
 curl -L https://github.com/decoch/dashcli/releases/latest/download/dashcli_Darwin_amd64.tar.gz | tar xz
-sudo mv dash /usr/local/bin/
+sudo mv dashcli /usr/local/bin/
 ```
 
 Linux (amd64):
 
 ```bash
 curl -L https://github.com/decoch/dashcli/releases/latest/download/dashcli_Linux_amd64.tar.gz | tar xz
-sudo mv dash /usr/local/bin/
+sudo mv dashcli /usr/local/bin/
 ```
 
 ## Quick Start
 
 ```bash
 # 1. Store base URL and API key in keyring
-dash auth set
+dashcli auth set
 # You will be prompted for:
 # - Base URL (e.g. https://your-redash.example.com)
 # - API key
 
 # 2. Use
-dash query list
-dash --json datasource list
+dashcli query list
+dashcli --json datasource list
 ```
 
 ## Authentication and Configuration
