@@ -128,8 +128,6 @@ func TestGetAPIKey_NotFound(t *testing.T) {
 }
 
 func TestOpenKeyring_Error(t *testing.T) {
-	t.Parallel()
-
 	prev := openKeyring
 	openKeyring = func() (keyring.Keyring, error) { return nil, errors.New("backend unavailable") }
 	t.Cleanup(func() { openKeyring = prev })
