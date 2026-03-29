@@ -36,7 +36,7 @@ func NewClient(baseURL, apiKey string, timeout time.Duration, debug bool) (*Clie
 	}
 
 	if timeout <= 0 {
-		timeout = 10 * time.Second
+		timeout = 60 * time.Second
 	}
 
 	return &Client{

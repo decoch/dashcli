@@ -90,7 +90,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&flags.BaseURL, "base-url", "", "Redash base URL")
 	rootCmd.PersistentFlags().StringVar(&flags.APIKey, "api-key", "", "Redash API key")
 	rootCmd.PersistentFlags().BoolVar(&flags.JSON, "json", false, "Print JSON output")
-	rootCmd.PersistentFlags().DurationVar(&flags.Timeout, "timeout", 10*time.Second, "HTTP timeout")
+	rootCmd.PersistentFlags().DurationVar(&flags.Timeout, "timeout", 60*time.Second, "HTTP timeout")
 	rootCmd.PersistentFlags().BoolVar(&flags.Debug, "debug", false, "Enable debug logging")
 
 	rootCmd.AddCommand(newVersionCmd(state))
