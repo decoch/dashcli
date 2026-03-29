@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -17,7 +18,7 @@ func (state *appState) apiClient() (*redash.Client, error) {
 		return nil, exitcode.Usagef("API key is required; set --api-key, keyring API key, or REDASH_API_KEY")
 	}
 
-	client, err := redash.NewClient(state.resolved.BaseURL, state.resolved.APIKey, state.resolved.Timeout, state.resolved.Debug)
+	client, err := redash.NewClient(state.resolved.BaseURL, state.resolved.APIKey, state.resolved.Timeout)
 	if err != nil {
 		return nil, exitcode.WrapUsage(err)
 	}
@@ -31,7 +32,10 @@ func asString(value any) string {
 	case fmt.Stringer:
 		return typed.String()
 	case float64:
-		return strconv.FormatInt(int64(typed), 10)
+		if typed == math.Trunc(typed) && !math.IsInf(typed, 0) && !math.IsNaN(typed) {
+			return strconv.FormatInt(int64(typed), 10)
+		}
+		return strconv.FormatFloat(typed, 'f', -1, 64)
 	case int:
 		return strconv.Itoa(typed)
 	case int64:

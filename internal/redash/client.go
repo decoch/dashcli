@@ -16,10 +16,9 @@ type Client struct {
 	baseURL    string
 	apiKey     string
 	httpClient *http.Client
-	debug      bool
 }
 
-func NewClient(baseURL, apiKey string, timeout time.Duration, debug bool) (*Client, error) {
+func NewClient(baseURL, apiKey string, timeout time.Duration) (*Client, error) {
 	trimmedBaseURL := strings.TrimSpace(baseURL)
 	if trimmedBaseURL == "" {
 		return nil, fmt.Errorf("base URL is required")
@@ -45,7 +44,6 @@ func NewClient(baseURL, apiKey string, timeout time.Duration, debug bool) (*Clie
 		httpClient: &http.Client{
 			Timeout: timeout,
 		},
-		debug: debug,
 	}, nil
 }
 

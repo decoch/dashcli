@@ -27,7 +27,6 @@ type rootFlags struct {
 	APIKey  string
 	JSON    bool
 	Timeout time.Duration
-	Debug   bool
 }
 
 type appState struct {
@@ -41,7 +40,6 @@ type resolvedConfig struct {
 	BaseURL string
 	APIKey  string
 	Timeout time.Duration
-	Debug   bool
 }
 
 func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
@@ -75,7 +73,6 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 				BaseURL: resolvedBaseURL,
 				APIKey:  resolvedAPIKey,
 				Timeout: state.flags.Timeout,
-				Debug:   state.flags.Debug,
 			}
 
 			flagAPIKey := strings.TrimSpace(state.flags.APIKey)
@@ -91,7 +88,6 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&flags.APIKey, "api-key", "", "Redash API key")
 	rootCmd.PersistentFlags().BoolVar(&flags.JSON, "json", false, "Print JSON output")
 	rootCmd.PersistentFlags().DurationVar(&flags.Timeout, "timeout", 60*time.Second, "HTTP timeout")
-	rootCmd.PersistentFlags().BoolVar(&flags.Debug, "debug", false, "Enable debug logging")
 
 	rootCmd.AddCommand(newVersionCmd(state))
 	rootCmd.AddCommand(newAuthCmd(state))

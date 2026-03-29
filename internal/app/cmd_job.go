@@ -87,7 +87,11 @@ func newJobCmd(state *appState) *cobra.Command {
 				if time.Now().After(deadline) {
 					return exitcode.Runtimef("timed out waiting for job %s", args[0])
 				}
-				time.Sleep(interval)
+				select {
+				case <-time.After(interval):
+				case <-cmd.Context().Done():
+					return exitcode.WrapRuntime(cmd.Context().Err())
+				}
 			}
 		},
 	}
@@ -98,4 +102,3 @@ func newJobCmd(state *appState) *cobra.Command {
 
 	return jobCmd
 }
-

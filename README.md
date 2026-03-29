@@ -19,9 +19,15 @@ It is designed for script-friendly automation, clear command behavior, and secur
 - `dash auth set|delete|status`
 - `dash me`
 - `dash query list|get|run`
+- `dash query create`
+- `dash query update <id>`
+- `dash query archive <id>`
+- `dash query results <id>`
 - `dash job get|wait`
 - `dash dashboard list|get`
 - `dash datasource list`
+- `dash datasource schema <id>`
+- `dash sql run`
 
 Run `dash --help` for full command and flag documentation.
 
@@ -76,8 +82,6 @@ sudo mv dash /usr/local/bin/
 ```
 
 ## Quick Start
-
-### Quick Start
 
 ```bash
 # 1. Store base URL and API key in keyring

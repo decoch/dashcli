@@ -2,6 +2,7 @@ package app
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/99designs/keyring"
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	"github.com/decoch/dashcli/internal/exitcode"
 	"github.com/decoch/dashcli/internal/redash"
@@ -23,6 +25,7 @@ var (
 	authSetBaseURL              = secrets.SetBaseURL
 	authGetBaseURL              = secrets.GetBaseURL
 	authDeleteBaseURL           = secrets.DeleteBaseURL
+	authReadPassword            = term.ReadPassword
 	authInput         io.Reader = os.Stdin
 )
 
@@ -49,7 +52,7 @@ func newAuthCmd(state *appState) *cobra.Command {
 			if baseURL == "" {
 				return exitcode.Usagef("base URL cannot be empty")
 			}
-			if _, err := redash.NewClient(baseURL, "dummy", time.Second, false); err != nil {
+			if _, err := redash.NewClient(baseURL, "dummy", time.Second); err != nil {
 				return exitcode.WrapUsage(err)
 			}
 
@@ -57,8 +60,22 @@ func newAuthCmd(state *appState) *cobra.Command {
 				return exitcode.WrapRuntime(err)
 			}
 			var apiKey string
-			if _, err := fmt.Fscan(reader, &apiKey); err != nil {
-				return exitcode.WrapRuntime(err)
+			if authInput == os.Stdin {
+				fd := int(os.Stdin.Fd())
+				raw, err := authReadPassword(fd)
+				if err != nil {
+					return exitcode.WrapRuntime(err)
+				}
+				if _, err := fmt.Fprintln(state.stdout); err != nil {
+					return exitcode.WrapRuntime(err)
+				}
+				apiKey = string(raw)
+			} else {
+				raw, err := reader.ReadString('\n')
+				if err != nil {
+					return exitcode.WrapRuntime(err)
+				}
+				apiKey = raw
 			}
 			apiKey = strings.TrimSpace(apiKey)
 			if apiKey == "" {
@@ -69,6 +86,9 @@ func newAuthCmd(state *appState) *cobra.Command {
 				return exitcode.WrapRuntime(err)
 			}
 			if err := authSetAPIKey(apiKey); err != nil {
+				if rollbackErr := authDeleteBaseURL(); rollbackErr != nil && !errors.Is(rollbackErr, keyring.ErrKeyNotFound) {
+					return exitcode.WrapRuntime(rollbackErr)
+				}
 				return exitcode.WrapRuntime(err)
 			}
 			if err := state.output().PrintText("Credentials stored in keyring\n"); err != nil {
@@ -82,10 +102,10 @@ func newAuthCmd(state *appState) *cobra.Command {
 		Use:   "delete",
 		Short: "Delete base URL and API key",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := authDeleteBaseURL(); err != nil && err != keyring.ErrKeyNotFound {
+			if err := authDeleteBaseURL(); err != nil && !errors.Is(err, keyring.ErrKeyNotFound) {
 				return exitcode.WrapRuntime(err)
 			}
-			if err := authDeleteAPIKey(); err != nil && err != keyring.ErrKeyNotFound {
+			if err := authDeleteAPIKey(); err != nil && !errors.Is(err, keyring.ErrKeyNotFound) {
 				return exitcode.WrapRuntime(err)
 			}
 			if err := state.output().PrintText("Credentials removed from keyring\n"); err != nil {
@@ -140,7 +160,7 @@ func isBaseURLSet() (bool, error) {
 	if err == nil {
 		return true, nil
 	}
-	if err == keyring.ErrKeyNotFound {
+	if errors.Is(err, keyring.ErrKeyNotFound) {
 		return false, nil
 	}
 	return false, err
@@ -151,7 +171,7 @@ func isAPIKeySet() (bool, error) {
 	if err == nil {
 		return true, nil
 	}
-	if err == keyring.ErrKeyNotFound {
+	if errors.Is(err, keyring.ErrKeyNotFound) {
 		return false, nil
 	}
 	return false, err

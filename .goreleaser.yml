@@ -6,6 +6,8 @@ builds:
   - id: dash
     main: ./cmd/dash
     binary: dash
+    ldflags:
+      - -s -w -X main.version={{.Version}}
     goos:
       - linux
       - darwin
@@ -37,4 +39,3 @@ release:
   github:
     owner: decoch
     name: dashcli
-

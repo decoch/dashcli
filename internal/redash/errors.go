@@ -1,6 +1,9 @@
 package redash
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type APIError struct {
 	StatusCode int
@@ -22,10 +25,9 @@ func (err *APIError) Error() string {
 }
 
 func IsStatus(err error, code int) bool {
-	typed, ok := err.(*APIError)
-	if !ok {
+	var typed *APIError
+	if !errors.As(err, &typed) {
 		return false
 	}
 	return typed.StatusCode == code
 }
-
