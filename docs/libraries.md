@@ -55,8 +55,8 @@
 
 ```text
 require (
-  github.com/spf13/cobra v1.x
+  github.com/spf13/cobra v1.8.1
 )
 ```
 
-Start with this single dependency and add others incrementally only when required.
+Pin an exact stable version in `go.mod` and upgrade intentionally (do not use floating placeholders).
