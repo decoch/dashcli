@@ -57,14 +57,6 @@ Extracted architecture patterns:
 ## API/auth and config policy
 
 - Use Redash API keys for authentication
-- API key precedence:
-  1. `--api-key`
-  2. `REDASH_API_KEY`
-  3. local config file
-- Base URL precedence:
-  1. `--base-url`
-  2. `REDASH_BASE_URL`
-  3. local config file
 
 Config file candidate:
 
@@ -96,9 +88,16 @@ Profile resolution rules:
 
 1. Selected profile name: `--profile` > `default_profile` > `default`
 2. Base URL: `--base-url` > `REDASH_BASE_URL` > selected profile `base_url`
-3. API key: `--api-key` > `REDASH_API_KEY` > env var referenced by selected profile `api_key_env`
+3. API key: `--api-key` > env var referenced by selected profile `api_key_env` > `REDASH_API_KEY`
+
+This makes profile-specific credentials win by default, while `REDASH_API_KEY` remains a global fallback.
 
 If the selected profile does not exist, exit with usage error (`2`).
+
+## Command behavior notes
+
+- `dash version`: prints CLI binary version only and exits; it does not call Redash APIs.
+- `dash me`: calls the current-user endpoint and prints a compact user summary in text mode (`id`, `name`, `email`, `is_admin`); `--json` prints the API response payload.
 
 ## Output policy
 
