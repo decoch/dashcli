@@ -42,23 +42,28 @@ Extracted architecture patterns:
 - `--api-key`
 - `--json`
 - `--timeout`
-- `--debug`
 
 ### Commands (first slice)
 
-- `dash version`
-- `dash auth set`
-- `dash auth delete`
-- `dash auth status`
-- `dash me`
-- `dash query list`
-- `dash query get <id>`
-- `dash query run <id>`
-- `dash job get <job-id>`
-- `dash job wait <job-id>`
-- `dash dashboard list`
-- `dash dashboard get <slug-or-id>`
-- `dash datasource list`
+- `dashcli version`
+- `dashcli auth set`
+- `dashcli auth delete`
+- `dashcli auth status`
+- `dashcli me`
+- `dashcli query list`
+- `dashcli query get <id>`
+- `dashcli query run <id>`
+- `dashcli query create`
+- `dashcli query update <id>`
+- `dashcli query archive <id>`
+- `dashcli query results <id>`
+- `dashcli job get <job-id>`
+- `dashcli job wait <job-id>`
+- `dashcli dashboard list`
+- `dashcli dashboard get <slug-or-id>`
+- `dashcli datasource list`
+- `dashcli datasource schema <id>`
+- `dashcli sql run`
 
 ## API/auth and config policy
 
@@ -74,15 +79,15 @@ Credential/base URL resolution rules:
 
 If `--api-key` is used and wins resolution, print a warning on stderr about insecure CLI argument usage.
 
-`dash auth set` stores both values in keyring service `dashcli`.
+`dashcli auth set` stores both values in keyring service `dashcli`.
 
 ## Command behavior notes
 
-- `dash version`: prints CLI binary version only and exits; it does not call Redash APIs.
-- `dash auth set`: prompts for base URL and API key, then stores both in OS keyring.
-- `dash auth delete`: removes stored base URL and API key from OS keyring.
-- `dash auth status`: prints whether base URL and API key are stored; key-not-found is a normal success state.
-- `dash me`: calls the current-user endpoint and prints a compact user summary in text mode (`id`, `name`, `email`, `is_admin`); `--json` prints the API response payload.
+- `dashcli version`: prints CLI binary version only and exits; it does not call Redash APIs.
+- `dashcli auth set`: prompts for base URL and API key, then stores both in OS keyring.
+- `dashcli auth delete`: removes stored base URL and API key from OS keyring.
+- `dashcli auth status`: prints whether base URL and API key are stored; key-not-found is a normal success state.
+- `dashcli me`: calls the current-user endpoint and prints a compact user summary in text mode (`id`, `name`, `email`, `is_admin`); `--json` prints the API response payload.
 
 ## Output policy
 

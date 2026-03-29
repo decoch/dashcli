@@ -16,6 +16,8 @@ internal/app/
   cmd_dashboard.go        # dashboard subcommands
   cmd_datasource.go       # datasource subcommands
   cmd_job.go              # job subcommands
+  cmd_sql.go              # ad-hoc SQL execution
+  helpers.go              # shared output helpers
 
 internal/redash/
   client.go               # HTTP client + auth transport

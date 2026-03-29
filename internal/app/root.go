@@ -51,7 +51,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	}
 
 	rootCmd := &cobra.Command{
-		Use:           "dash",
+		Use:           "dashcli",
 		Short:         "CLI for Redash API",
 		SilenceUsage:  true,
 		SilenceErrors: true,

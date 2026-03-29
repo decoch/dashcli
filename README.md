@@ -9,29 +9,29 @@ It is designed for script-friendly automation, clear command behavior, and secur
 - Redash API operations from terminal commands
 - JSON output mode for automation (`--json`)
 - Single-instance default workflow (no profile management)
-- Base URL and API key storage in OS keyring (`dash auth`)
+- Base URL and API key storage in OS keyring (`dashcli auth`)
 - Clear precedence rules for credentials and configuration
 - Small, testable Go codebase
 
 ## Command Surface
 
-- `dash version`
-- `dash auth set|delete|status`
-- `dash me`
-- `dash query list|get|run`
-- `dash query create`
-- `dash query update <id>`
-- `dash query archive <id>`
-- `dash query results <id>`
-- `dash job get|wait`
-- `dash dashboard list|get`
-- `dash datasource list`
-- `dash datasource schema <id>`
-- `dash sql run`
+- `dashcli version`
+- `dashcli auth set|delete|status`
+- `dashcli me`
+- `dashcli query list|get|run`
+- `dashcli query create`
+- `dashcli query update <id>`
+- `dashcli query archive <id>`
+- `dashcli query results <id>`
+- `dashcli job get|wait`
+- `dashcli dashboard list|get`
+- `dashcli datasource list`
+- `dashcli datasource schema <id>`
+- `dashcli sql run`
 
-Run `dash --help` for full command and flag documentation.
+Run `dashcli --help` for full command and flag documentation.
 
-`dash auth ...` commands work without `--base-url` because they manage local keyring state.
+`dashcli auth ...` commands work without `--base-url` because they manage local keyring state.
 
 ## Installation
 
@@ -39,7 +39,7 @@ Run `dash --help` for full command and flag documentation.
 
 Requirements:
 
-- Go 1.22+
+- Go 1.25+
 
 ```bash
 git clone https://github.com/decoch/dashcli.git
@@ -114,18 +114,18 @@ dash --json datasource list
 
 ### Keyring entries
 
-`dash auth set` stores two entries in keyring service `dashcli`:
+`dashcli auth set` stores two entries in keyring service `dashcli`:
 
 - `base_url`
 - `api_key`
 
-`dash auth status` checks whether both values are present.
+`dashcli auth status` checks whether both values are present.
 
-`dash auth delete` removes both values.
+`dashcli auth delete` removes both values.
 
 ## Security Notes
 
-- Prefer `dash auth set` (keyring) over `--api-key` for day-to-day use.
+- Prefer `dashcli auth set` (keyring) over `--api-key` for day-to-day use.
 - `--api-key` prints a warning because command-line args can leak via shell history/process list.
 - `http://` base URLs are rejected to prevent unencrypted API key transmission.
 
