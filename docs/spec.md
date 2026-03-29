@@ -43,7 +43,6 @@ Extracted architecture patterns:
 - `--json`
 - `--timeout`
 - `--debug`
-- `--profile` (switch between multiple environments)
 
 ### Commands (first slice)
 
@@ -66,52 +65,23 @@ Extracted architecture patterns:
 - Use Redash API keys for authentication
 - Prefer keyring-backed secrets over command-line flags for local development
 - Reject `http://` base URLs to prevent plaintext API key transport
+- Default product mode is single-instance (no profile switching)
 
-Config file candidate:
+Credential/base URL resolution rules:
 
-- `$(os.UserConfigDir())/dashcli/config.json`
-
-### Profile behavior (`--profile`)
-
-Profiles allow switching Redash environments (for example: `prod`, `stg`) without rewriting flags.
-Profiles are intended for users who operate multiple Redash instances (for example, different companies or teams). A single-instance setup does not require profiles.
-
-Proposed config shape:
-
-```json
-{
-  "default_profile": "prod",
-  "profiles": {
-    "prod": {
-      "base_url": "https://redash.example.com",
-      "api_key_env": "REDASH_API_KEY_PROD"
-    },
-    "stg": {
-      "base_url": "https://redash-stg.example.com",
-      "api_key_env": "REDASH_API_KEY_STG"
-    }
-  }
-}
-```
-
-Profile resolution rules:
-
-1. Selected profile name: `--profile` > `default_profile` > `default`
-2. Base URL: `--base-url` > `REDASH_BASE_URL` > selected profile `base_url`
-3. API key: `--api-key` > keyring secret for selected profile > env var referenced by selected profile `api_key_env` > `REDASH_API_KEY`
+1. Base URL: `--base-url` > keyring `base_url` > `REDASH_BASE_URL`
+2. API key: `--api-key` > keyring `api_key` > `REDASH_API_KEY`
 
 If `--api-key` is used and wins resolution, print a warning on stderr about insecure CLI argument usage.
 
-This makes profile-specific keyring/env credentials win by default, while `REDASH_API_KEY` remains a global fallback.
-
-If the selected profile does not exist, exit with usage error (`2`).
+`dash auth set` stores both values in keyring service `dashcli`.
 
 ## Command behavior notes
 
 - `dash version`: prints CLI binary version only and exits; it does not call Redash APIs.
-- `dash auth set`: reads API key from stdin and stores it in OS keyring for the selected profile (`default` when `--profile` is unset).
-- `dash auth delete`: removes API key from OS keyring for the selected profile.
-- `dash auth status`: prints whether API key exists for the selected profile; key-not-found is a normal success state.
+- `dash auth set`: prompts for base URL and API key, then stores both in OS keyring.
+- `dash auth delete`: removes stored base URL and API key from OS keyring.
+- `dash auth status`: prints whether base URL and API key are stored; key-not-found is a normal success state.
 - `dash me`: calls the current-user endpoint and prints a compact user summary in text mode (`id`, `name`, `email`, `is_admin`); `--json` prints the API response payload.
 
 ## Output policy
@@ -128,8 +98,7 @@ If the selected profile does not exist, exit with usage error (`2`).
 
 - `internal/redash`: API contract tests with `httptest.Server`
 - `internal/app`: verify `Run(...)` I/O and exit codes
-- `internal/config`: verify precedence and profile resolution
-- `internal/secrets`: exercised by app/config integration paths (mocked in app tests)
+- `internal/secrets`: verify keyring read/write/remove and auth command behavior
 - `internal/output`: verify text/JSON rendering behavior and stable machine output
 
 ## Project docs

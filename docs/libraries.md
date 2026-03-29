@@ -39,7 +39,7 @@
 ### `viper`
 
 - Reason to reject: heavy config layer with more implicit behavior
-- Alternative: implement explicit `flag > env > file` in `internal/config`
+- Alternative: keep explicit `flag > keyring > env` resolution in `internal/app`
 
 ### `resty`
 

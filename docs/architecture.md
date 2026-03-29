@@ -26,10 +26,6 @@ internal/redash/
   datasources.go          # /api/data_sources
   errors.go               # API error mapping
 
-internal/config/
-  config.go               # file/env/flag merge
-  profile.go              # profile resolution
-
 internal/secrets/
   keyring.go              # OS keyring wrapper
 
@@ -43,8 +39,8 @@ internal/exitcode/
 ## 2. Execution flow
 
 1. `cmd/dash/main.go` calls `app.Run(...)`
-2. `internal/app` parses flags and resolves profile
-3. `internal/config` resolves profile and credentials (`flag > keyring > env`, with config-backed profile metadata)
+2. `internal/app` parses flags and resolves credentials (`flag > keyring > env`)
+3. `internal/secrets` provides keyring-backed `base_url` and `api_key`
 4. Build `internal/redash/client` (timeout, auth header)
 5. Execute the subcommand (`auth` commands bypass API/client requirements)
 6. `internal/output` renders text/json

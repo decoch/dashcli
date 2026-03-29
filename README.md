@@ -8,8 +8,8 @@ It is designed for script-friendly automation, clear command behavior, and secur
 
 - Redash API operations from terminal commands
 - JSON output mode for automation (`--json`)
-- Profile-based environment switching (`--profile`)
-- API key storage in OS keyring (`dash auth`)
+- Single-instance default workflow (no profile management)
+- Base URL and API key storage in OS keyring (`dash auth`)
 - Clear precedence rules for credentials and configuration
 - Small, testable Go codebase
 
@@ -25,7 +25,7 @@ It is designed for script-friendly automation, clear command behavior, and secur
 
 Run `dash --help` for full command and flag documentation.
 
-`dash auth ...` commands work without `--base-url` because they operate on local keyring state.
+`dash auth ...` commands work without `--base-url` because they manage local keyring state.
 
 ## Installation
 
@@ -77,53 +77,19 @@ sudo mv dash /usr/local/bin/
 
 ## Quick Start
 
-### Quick Start (single Redash instance)
+### Quick Start
 
 ```bash
-# 1. Create config file
-#    macOS:  ~/Library/Application Support/dashcli/config.json
-#    Linux:  ~/.config/dashcli/config.json
-{
-  "base_url": "https://your-redash.example.com"
-}
-
-# 2. Store API key in keyring
+# 1. Store base URL and API key in keyring
 dash auth set
-# You will be prompted to enter your API key securely.
+# You will be prompted for:
+# - Base URL (e.g. https://your-redash.example.com)
+# - API key
 
-# 3. Use
+# 2. Use
 dash me
 dash query list
 dash --json datasource list
-```
-
-### Advanced: multiple Redash instances
-
-Use `--profile` to switch between instances (e.g. different companies or teams).
-
-Config:
-
-```json
-{
-  "default_profile": "projectA",
-  "profiles": {
-    "projectA": { "base_url": "https://redash.projecta.com" },
-    "projectB": { "base_url": "https://redash.projectb.com" }
-  }
-}
-```
-
-Store keys per profile:
-
-```bash
-dash auth set --profile projectA
-dash auth set --profile projectB
-```
-
-Switch:
-
-```bash
-dash --profile projectB query list
 ```
 
 ## Authentication and Configuration
@@ -133,46 +99,25 @@ dash --profile projectB query list
 `dashcli` resolves API key in this order:
 
 1. `--api-key`
-2. keyring secret for selected profile
-3. profile `api_key_env`
-4. `REDASH_API_KEY`
+2. keyring `api_key`
+3. `REDASH_API_KEY`
 
 ### Base URL precedence
 
 1. `--base-url`
-2. `REDASH_BASE_URL`
-3. selected profile `base_url`
+2. keyring `base_url`
+3. `REDASH_BASE_URL`
 
-### Profile selection
+### Keyring entries
 
-1. `--profile`
-2. `default_profile` in config
-3. `default` (when profiles exist)
+`dash auth set` stores two entries in keyring service `dashcli`:
 
-### Config file
+- `base_url`
+- `api_key`
 
-- macOS: `~/Library/Application Support/dashcli/config.json`
-- Linux: `~/.config/dashcli/config.json`
+`dash auth status` checks whether both values are present.
 
-Simple (single instance):
-
-```json
-{
-  "base_url": "https://your-redash.example.com"
-}
-```
-
-With profiles (multiple instances):
-
-```json
-{
-  "default_profile": "projectA",
-  "profiles": {
-    "projectA": { "base_url": "https://redash.projecta.com" },
-    "projectB": { "base_url": "https://redash.projectb.com" }
-  }
-}
-```
+`dash auth delete` removes both values.
 
 ## Security Notes
 
