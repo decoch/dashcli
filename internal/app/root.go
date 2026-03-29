@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"io"
 	"os"
 	"time"
@@ -10,11 +11,13 @@ import (
 	"github.com/decoch/dashcli/internal/config"
 	"github.com/decoch/dashcli/internal/exitcode"
 	"github.com/decoch/dashcli/internal/output"
+	"github.com/decoch/dashcli/internal/secrets"
 )
 
 var (
 	loadConfig = config.LoadDefault
 	lookupEnv  = os.LookupEnv
+	getSecret  = secrets.Get
 )
 
 type rootFlags struct {
@@ -47,7 +50,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if cmd.Name() == "version" {
+			if cmd.Name() == "version" || isAuthCommand(cmd) {
 				return nil
 			}
 			cfg, err := loadConfig()
@@ -64,8 +67,13 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 				},
 				Config:    cfg,
 				LookupEnv: lookupEnv,
+				GetSecret: getSecret,
 			})
 			if err != nil {
+				var runtimeErr *config.RuntimeError
+				if errors.As(err, &runtimeErr) {
+					return exitcode.WrapRuntime(err)
+				}
 				return exitcode.WrapUsage(err)
 			}
 			state.resolved = resolved
@@ -81,6 +89,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&flags.Profile, "profile", "", "Profile name")
 
 	rootCmd.AddCommand(newVersionCmd(state))
+	rootCmd.AddCommand(newAuthCmd(state))
 	rootCmd.AddCommand(newMeCmd(state))
 	rootCmd.AddCommand(newQueryCmd(state))
 	rootCmd.AddCommand(newJobCmd(state))
@@ -88,6 +97,15 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newDataSourceCmd(state))
 
 	return rootCmd
+}
+
+func isAuthCommand(cmd *cobra.Command) bool {
+	for current := cmd; current != nil; current = current.Parent() {
+		if current.Name() == "auth" {
+			return true
+		}
+	}
+	return false
 }
 
 func (state *appState) output() *output.Output {

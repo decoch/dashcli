@@ -1,9 +1,12 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/99designs/keyring"
 )
 
 const (
@@ -12,6 +15,7 @@ const (
 )
 
 type LookupEnvFunc func(string) (string, bool)
+type GetSecretFunc func(string) (string, error)
 
 type Flags struct {
 	BaseURL string
@@ -25,6 +29,7 @@ type ResolveInput struct {
 	Flags     Flags
 	Config    File
 	LookupEnv LookupEnvFunc
+	GetSecret GetSecretFunc
 }
 
 type Resolved struct {
@@ -35,10 +40,34 @@ type Resolved struct {
 	Debug   bool
 }
 
+type RuntimeError struct {
+	Err error
+}
+
+func (err *RuntimeError) Error() string {
+	if err == nil || err.Err == nil {
+		return "runtime error"
+	}
+	return err.Err.Error()
+}
+
+func (err *RuntimeError) Unwrap() error {
+	if err == nil {
+		return nil
+	}
+	return err.Err
+}
+
 func Resolve(input ResolveInput) (Resolved, error) {
 	lookupEnv := input.LookupEnv
 	if lookupEnv == nil {
 		lookupEnv = func(string) (string, bool) { return "", false }
+	}
+	getSecret := input.GetSecret
+	if getSecret == nil {
+		getSecret = func(string) (string, error) {
+			return "", keyring.ErrKeyNotFound
+		}
 	}
 
 	selectedProfile, profile, err := resolveProfile(input.Config, strings.TrimSpace(input.Flags.Profile))
@@ -57,6 +86,19 @@ func Resolve(input ResolveInput) (Resolved, error) {
 	}
 
 	apiKey := strings.TrimSpace(input.Flags.APIKey)
+	if apiKey == "" {
+		secretProfile := selectedProfile
+		if secretProfile == "" {
+			secretProfile = "default"
+		}
+
+		secretValue, err := getSecret(secretProfile)
+		if err == nil {
+			apiKey = strings.TrimSpace(secretValue)
+		} else if !errors.Is(err, keyring.ErrKeyNotFound) {
+			return Resolved{}, &RuntimeError{Err: fmt.Errorf("load API key from keyring: %w", err)}
+		}
+	}
 	if apiKey == "" {
 		keyEnv := strings.TrimSpace(profile.APIKeyEnv)
 		if keyEnv != "" {
@@ -104,4 +146,3 @@ func resolveProfile(configFile File, flagProfile string) (string, Profile, error
 	}
 	return selectedProfile, profile, nil
 }
-
