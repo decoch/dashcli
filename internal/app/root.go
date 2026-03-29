@@ -12,6 +12,11 @@ import (
 	"github.com/decoch/dashcli/internal/output"
 )
 
+var (
+	loadConfig = config.LoadDefault
+	lookupEnv  = os.LookupEnv
+)
+
 type rootFlags struct {
 	BaseURL string
 	APIKey  string
@@ -45,7 +50,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 			if cmd.Name() == "version" {
 				return nil
 			}
-			cfg, err := config.LoadDefault()
+			cfg, err := loadConfig()
 			if err != nil {
 				return exitcode.WrapRuntime(err)
 			}
@@ -58,7 +63,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 					Debug:   state.flags.Debug,
 				},
 				Config:    cfg,
-				LookupEnv: os.LookupEnv,
+				LookupEnv: lookupEnv,
 			})
 			if err != nil {
 				return exitcode.WrapUsage(err)
