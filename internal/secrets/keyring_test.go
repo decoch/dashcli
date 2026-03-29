@@ -59,8 +59,6 @@ func stubOpenKeyring(t *testing.T) *mockKeyring {
 }
 
 func TestSetAndGetAPIKey(t *testing.T) {
-	t.Parallel()
-
 	stubOpenKeyring(t)
 
 	if err := SetAPIKey("test-api-key"); err != nil {
@@ -76,8 +74,6 @@ func TestSetAndGetAPIKey(t *testing.T) {
 }
 
 func TestSetAndGetBaseURL(t *testing.T) {
-	t.Parallel()
-
 	stubOpenKeyring(t)
 
 	if err := SetBaseURL("https://redash.example.com"); err != nil {
@@ -93,8 +89,6 @@ func TestSetAndGetBaseURL(t *testing.T) {
 }
 
 func TestDeleteAPIKey(t *testing.T) {
-	t.Parallel()
-
 	stubOpenKeyring(t)
 
 	if err := SetAPIKey("key"); err != nil {
@@ -110,8 +104,6 @@ func TestDeleteAPIKey(t *testing.T) {
 }
 
 func TestDeleteBaseURL(t *testing.T) {
-	t.Parallel()
-
 	stubOpenKeyring(t)
 
 	if err := SetBaseURL("https://redash.example.com"); err != nil {
@@ -127,8 +119,6 @@ func TestDeleteBaseURL(t *testing.T) {
 }
 
 func TestGetAPIKey_NotFound(t *testing.T) {
-	t.Parallel()
-
 	stubOpenKeyring(t)
 
 	_, err := GetAPIKey()
