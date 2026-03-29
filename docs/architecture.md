@@ -46,26 +46,7 @@ internal/exitcode/
 6. `internal/output` renders text/json
 7. `internal/exitcode` maps and returns the exit code
 
-## 3. Design decisions from references
-
-### From `gogcli`
-
-- Keep global flag design explicit (output mode, verbose, auth-related)
-- Treat machine-readable output as first-class
-- Keep entrypoint minimal and route behavior through a testable internal runner
-- Centralize error formatting and map domain errors to stable exit codes
-
-### From `sonoscli`
-
-- Split command tree by subcommand responsibility
-- Keep dependency creation at function boundaries for test-time replacement
-
-### From `blucli`
-
-- Use `Run(ctx, args, stdout, stderr)` for high testability
-- Separate `internal/output` to keep output behavior consistent
-
-## 4. Error model
+## 3. Error model
 
 - Usage error (missing required args, invalid flags)
 - API error (4xx/5xx + Redash error payload)
@@ -73,7 +54,7 @@ internal/exitcode/
 
 Normalize these into internal error types and map them to exit codes.
 
-## 5. Extensibility policy
+## 4. Extensibility policy
 
 - Add new APIs via `internal/redash/<resource>.go`
 - Add new command handlers via `internal/app/cmd_<resource>.go`
