@@ -4,7 +4,7 @@
 
 - Keep dependencies minimal and centered on the standard library
 - Adopt only what is needed for API calls and CLI UX
-- Prioritize patterns proven in `gogcli`, `sonoscli`, and `blucli`
+- Prioritize stability and explicitness over convenience abstractions
 
 ## Adopt (v0)
 
@@ -12,19 +12,19 @@
 
 - Reason: naturally models resource-oriented commands (query/dashboard/job)
 - Reason: strong built-in help and completion support
-- Reference: proven command-tree usage in `sonoscli`
+- Reason: subcommand structure (resource verb pattern) maps naturally to Redash's REST API
 
 ### `github.com/99designs/keyring`
 
 - Reason: secure API key storage in OS keychain/keyring
 - Reason: avoids leaking long-lived keys via shell history and process args
-- Reference: mature secret handling pattern in `gogcli`
+- Reason: cross-platform (macOS Keychain, Linux Secret Service, Windows Credential Store)
 
 ### Standard library (`net/http`, `encoding/json`, `context`, `log/slog`)
 
 - Reason: the Redash API is REST + JSON, which standard packages handle well
 - Reason: fewer dependencies reduce maintenance cost
-- Reference: `blucli` runs stably with a lean dependency set
+- Reason: minimizes transitive dependencies and keeps the build reproducible
 - Note: CLI flag parsing is handled by `cobra`/`pflag`, not Go's `flag` package directly
 
 ## Optional (need-based)

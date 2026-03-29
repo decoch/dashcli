@@ -18,21 +18,13 @@ Design a Go-based Redash CLI (`dash`) with the following primary goals.
 
 - Go `1.25+` (see `go.mod`)
 
-## Reference repositories and extracted patterns
-
-This spec is based on the following repositories.
-
-- `steipete/gogcli`
-- `steipete/sonoscli`
-- `steipete/blucli`
-
-Extracted architecture patterns:
+## Architecture patterns
 
 - Keep `cmd/<bin>/main.go` thin (entrypoint only)
 - Separate responsibilities under `internal/*`
 - Expose a testable entrypoint such as `Run(ctx, args, stdout, stderr)`
 - Isolate output concerns in `internal/output`
-- Manage common global flags like `--json` / `--debug` / `--timeout` consistently
+- Manage common global flags like `--json` / `--timeout` consistently
 
 ## v0 Command surface
 
