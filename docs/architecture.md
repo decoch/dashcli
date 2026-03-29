@@ -3,7 +3,7 @@
 ## 1. Package layout
 
 ```text
-cmd/dash/
+cmd/dashcli/
   main.go                 # thin entrypoint
 
 internal/app/

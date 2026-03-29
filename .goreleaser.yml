@@ -4,7 +4,7 @@ project_name: dashcli
 
 builds:
   - id: dashcli
-    main: ./cmd/dash
+    main: ./cmd/dashcli
     binary: dashcli
     ldflags:
       - -s -w -X main.version={{.Version}}
