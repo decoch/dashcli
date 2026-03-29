@@ -15,10 +15,11 @@ import (
 type Client struct {
 	baseURL    string
 	apiKey     string
+	userAgent  string
 	httpClient *http.Client
 }
 
-func NewClient(baseURL, apiKey string, timeout time.Duration) (*Client, error) {
+func NewClient(baseURL, apiKey, userAgent string, timeout time.Duration) (*Client, error) {
 	trimmedBaseURL := strings.TrimSpace(baseURL)
 	if trimmedBaseURL == "" {
 		return nil, fmt.Errorf("base URL is required")
@@ -39,8 +40,9 @@ func NewClient(baseURL, apiKey string, timeout time.Duration) (*Client, error) {
 	}
 
 	return &Client{
-		baseURL: strings.TrimRight(trimmedBaseURL, "/"),
-		apiKey:  strings.TrimSpace(apiKey),
+		baseURL:   strings.TrimRight(trimmedBaseURL, "/"),
+		apiKey:    strings.TrimSpace(apiKey),
+		userAgent: strings.TrimSpace(userAgent),
 		httpClient: &http.Client{
 			Timeout: timeout,
 		},
@@ -112,6 +114,9 @@ func (client *Client) doJSONWithParams(ctx context.Context, method, path string,
 	}
 	if client.apiKey != "" {
 		request.Header.Set("Authorization", "Key "+client.apiKey)
+	}
+	if client.userAgent != "" {
+		request.Header.Set("User-Agent", client.userAgent)
 	}
 
 	response, err := client.httpClient.Do(request)

@@ -52,7 +52,7 @@ func newAuthCmd(state *appState) *cobra.Command {
 			if baseURL == "" {
 				return exitcode.Usagef("base URL cannot be empty")
 			}
-			if _, err := redash.NewClient(baseURL, "dummy", time.Second); err != nil {
+			if _, err := redash.NewClient(baseURL, "dummy", "", time.Second); err != nil {
 				return exitcode.WrapUsage(err)
 			}
 

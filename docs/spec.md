@@ -42,6 +42,7 @@ Extracted architecture patterns:
 - `--api-key`
 - `--json`
 - `--timeout`
+- `--user-agent` (default: `dashcli`)
 
 ### Commands (first slice)
 

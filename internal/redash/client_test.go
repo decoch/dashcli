@@ -13,7 +13,7 @@ import (
 func TestNewClient_InvalidBaseURL(t *testing.T) {
 	t.Parallel()
 
-	_, err := NewClient("/relative", "", time.Second)
+	_, err := NewClient("", "test-key", "", time.Second)
 	if err == nil {
 		t.Fatal("NewClient() error = nil, want error")
 	}
@@ -26,7 +26,7 @@ func TestListQueries_AuthorizationHeaderAndResults(t *testing.T) {
 	var gotPath string
 	var gotQuery string
 
-	client, err := NewClient("https://redash.example.com", "test-key", time.Second)
+	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
 	if err != nil {
 		t.Fatalf("NewClient() error = %v", err)
 	}
@@ -61,7 +61,7 @@ func TestArchiveQuery_UsesDelete(t *testing.T) {
 	var gotMethod string
 	var gotPath string
 
-	client, err := NewClient("https://redash.example.com", "", time.Second)
+	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
 	if err != nil {
 		t.Fatalf("NewClient() error = %v", err)
 	}
@@ -88,7 +88,7 @@ func TestExecuteSQL_RequestBody(t *testing.T) {
 	var gotPath string
 	var requestBody map[string]any
 
-	client, err := NewClient("https://redash.example.com", "", time.Second)
+	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
 	if err != nil {
 		t.Fatalf("NewClient() error = %v", err)
 	}
@@ -124,7 +124,7 @@ func TestExecuteSQL_RequestBody(t *testing.T) {
 func TestMe_FallbackToUsersMe(t *testing.T) {
 	t.Parallel()
 
-	client, err := NewClient("https://redash.example.com", "", time.Second)
+	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
 	if err != nil {
 		t.Fatalf("NewClient() error = %v", err)
 	}
@@ -151,7 +151,7 @@ func TestMe_FallbackToUsersMe(t *testing.T) {
 func TestAPIError_MessageParsing(t *testing.T) {
 	t.Parallel()
 
-	client, err := NewClient("https://redash.example.com", "", time.Second)
+	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
 	if err != nil {
 		t.Fatalf("NewClient() error = %v", err)
 	}

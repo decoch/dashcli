@@ -18,7 +18,7 @@ func (state *appState) apiClient() (*redash.Client, error) {
 		return nil, exitcode.Usagef("API key is required; set --api-key, keyring API key, or REDASH_API_KEY")
 	}
 
-	client, err := redash.NewClient(state.resolved.BaseURL, state.resolved.APIKey, state.resolved.Timeout)
+	client, err := redash.NewClient(state.resolved.BaseURL, state.resolved.APIKey, state.resolved.UserAgent, state.resolved.Timeout)
 	if err != nil {
 		return nil, exitcode.WrapUsage(err)
 	}

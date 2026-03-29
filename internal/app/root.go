@@ -23,10 +23,11 @@ var (
 )
 
 type rootFlags struct {
-	BaseURL string
-	APIKey  string
-	JSON    bool
-	Timeout time.Duration
+	BaseURL   string
+	APIKey    string
+	JSON      bool
+	Timeout   time.Duration
+	UserAgent string
 }
 
 type appState struct {
@@ -37,9 +38,10 @@ type appState struct {
 }
 
 type resolvedConfig struct {
-	BaseURL string
-	APIKey  string
-	Timeout time.Duration
+	BaseURL   string
+	APIKey    string
+	Timeout   time.Duration
+	UserAgent string
 }
 
 func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
@@ -70,9 +72,10 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 			}
 
 			state.resolved = resolvedConfig{
-				BaseURL: resolvedBaseURL,
-				APIKey:  resolvedAPIKey,
-				Timeout: state.flags.Timeout,
+				BaseURL:   resolvedBaseURL,
+				APIKey:    resolvedAPIKey,
+				Timeout:   state.flags.Timeout,
+				UserAgent: state.flags.UserAgent,
 			}
 
 			flagAPIKey := strings.TrimSpace(state.flags.APIKey)
@@ -88,6 +91,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().StringVar(&flags.APIKey, "api-key", "", "Redash API key")
 	rootCmd.PersistentFlags().BoolVar(&flags.JSON, "json", false, "Print JSON output")
 	rootCmd.PersistentFlags().DurationVar(&flags.Timeout, "timeout", 60*time.Second, "HTTP timeout")
+	rootCmd.PersistentFlags().StringVar(&flags.UserAgent, "user-agent", "dashcli", "HTTP User-Agent header")
 
 	rootCmd.AddCommand(newVersionCmd(state))
 	rootCmd.AddCommand(newAuthCmd(state))
