@@ -70,6 +70,36 @@ Config file candidate:
 
 - `$(os.UserConfigDir())/dashcli/config.json`
 
+### Profile behavior (`--profile`)
+
+Profiles allow switching Redash environments (for example: `prod`, `stg`) without rewriting flags.
+
+Proposed config shape:
+
+```json
+{
+  "default_profile": "prod",
+  "profiles": {
+    "prod": {
+      "base_url": "https://redash.example.com",
+      "api_key_env": "REDASH_API_KEY_PROD"
+    },
+    "stg": {
+      "base_url": "https://redash-stg.example.com",
+      "api_key_env": "REDASH_API_KEY_STG"
+    }
+  }
+}
+```
+
+Profile resolution rules:
+
+1. Selected profile name: `--profile` > `default_profile` > `default`
+2. Base URL: `--base-url` > `REDASH_BASE_URL` > selected profile `base_url`
+3. API key: `--api-key` > `REDASH_API_KEY` > env var referenced by selected profile `api_key_env`
+
+If the selected profile does not exist, exit with usage error (`2`).
+
 ## Output policy
 
 - Default: human-readable text
@@ -85,6 +115,7 @@ Config file candidate:
 - `internal/redash`: API contract tests with `httptest.Server`
 - `internal/app`: verify `Run(...)` I/O and exit codes
 - `internal/config`: verify precedence and profile resolution
+- `internal/output`: verify text/JSON rendering behavior and stable machine output
 
 ## Deliverables for architecture phase
 
