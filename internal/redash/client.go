@@ -31,6 +31,9 @@ func NewClient(baseURL, apiKey string, timeout time.Duration, debug bool) (*Clie
 	if parsed.Scheme == "" || parsed.Host == "" {
 		return nil, fmt.Errorf("invalid base URL: %q", baseURL)
 	}
+	if strings.EqualFold(parsed.Scheme, "http") {
+		return nil, fmt.Errorf("base URL uses http:// — API key will be sent unencrypted; use https://")
+	}
 
 	if timeout <= 0 {
 		timeout = 10 * time.Second
@@ -174,4 +177,3 @@ func toObjectList(raw []any) []map[string]any {
 	}
 	return objects
 }
-

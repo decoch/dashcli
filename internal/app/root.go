@@ -2,8 +2,10 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -77,6 +79,12 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 				return exitcode.WrapUsage(err)
 			}
 			state.resolved = resolved
+
+			flagAPIKey := strings.TrimSpace(state.flags.APIKey)
+			if flagAPIKey != "" && resolved.APIKey == flagAPIKey {
+				_, _ = fmt.Fprintln(state.stderr, "Warning: passing API key via --api-key is insecure; prefer keyring or environment variable")
+			}
+
 			return nil
 		},
 	}
