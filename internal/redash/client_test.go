@@ -55,6 +55,46 @@ func TestListQueries_AuthorizationHeaderAndResults(t *testing.T) {
 	}
 }
 
+func TestNewClient_UserAgentHeader(t *testing.T) {
+	t.Parallel()
+
+	var gotUserAgent string
+
+	client, err := NewClient("https://redash.example.com", "test-key", "myapp/1.0", time.Second)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	client.httpClient = &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		gotUserAgent = request.Header.Get("User-Agent")
+		return jsonResponse(http.StatusOK, `{"results":[]}`), nil
+	})}
+
+	_, _ = client.ListQueries(context.Background(), 1, 20, "-updated_at", "")
+	if gotUserAgent != "myapp/1.0" {
+		t.Fatalf("User-Agent = %q, want %q", gotUserAgent, "myapp/1.0")
+	}
+}
+
+func TestNewClient_EmptyUserAgent_NotSet(t *testing.T) {
+	t.Parallel()
+
+	var gotUserAgent string
+
+	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	client.httpClient = &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		gotUserAgent = request.Header.Get("User-Agent")
+		return jsonResponse(http.StatusOK, `{"results":[]}`), nil
+	})}
+
+	_, _ = client.ListQueries(context.Background(), 1, 20, "-updated_at", "")
+	if gotUserAgent != "" {
+		t.Fatalf("User-Agent = %q, want empty", gotUserAgent)
+	}
+}
+
 func TestArchiveQuery_UsesDelete(t *testing.T) {
 	t.Parallel()
 
