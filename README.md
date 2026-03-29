@@ -33,7 +33,7 @@ Run `dash --help` for full command and flag documentation.
 
 Requirements:
 
-- Go 1.25+
+- Go 1.22+
 
 ```bash
 git clone https://github.com/decoch/dashcli.git
@@ -49,25 +49,86 @@ go install github.com/decoch/dashcli/cmd/dash@latest
 dash version
 ```
 
+### Download binary (recommended)
+
+Download the latest release from GitHub Releases:
+https://github.com/decoch/dashcli/releases
+
+macOS (Apple Silicon):
+
+```bash
+curl -L https://github.com/decoch/dashcli/releases/latest/download/dashcli_Darwin_arm64.tar.gz | tar xz
+sudo mv dash /usr/local/bin/
+```
+
+macOS (Intel):
+
+```bash
+curl -L https://github.com/decoch/dashcli/releases/latest/download/dashcli_Darwin_amd64.tar.gz | tar xz
+sudo mv dash /usr/local/bin/
+```
+
+Linux (amd64):
+
+```bash
+curl -L https://github.com/decoch/dashcli/releases/latest/download/dashcli_Linux_amd64.tar.gz | tar xz
+sudo mv dash /usr/local/bin/
+```
+
 ## Quick Start
 
-1. Set base URL and API key (recommended via keyring):
+1. Create the config file first.
+
+Config file path:
+
+- macOS: `~/Library/Application Support/dashcli/config.json`
+- Linux: `~/.config/dashcli/config.json`
+
+macOS:
 
 ```bash
-echo "<YOUR_REDASH_API_KEY>" | dash auth set --profile prod
+mkdir -p "$HOME/Library/Application Support/dashcli"
+cat > "$HOME/Library/Application Support/dashcli/config.json" <<'JSON'
+{
+  "default_profile": "prod",
+  "profiles": {
+    "prod": {
+      "base_url": "https://your-redash.example.com"
+    }
+  }
+}
+JSON
 ```
 
-2. Call Redash:
+Linux:
 
 ```bash
-dash --profile prod --base-url https://redash.example.com me
-dash --profile prod --base-url https://redash.example.com query list
+mkdir -p "$HOME/.config/dashcli"
+cat > "$HOME/.config/dashcli/config.json" <<'JSON'
+{
+  "default_profile": "prod",
+  "profiles": {
+    "prod": {
+      "base_url": "https://your-redash.example.com"
+    }
+  }
+}
+JSON
 ```
 
-3. Use JSON output for scripts:
+2. Store API key in keyring:
 
 ```bash
-dash --json --profile prod --base-url https://redash.example.com datasource list
+dash auth set --profile prod
+# You will be prompted to enter your API key securely.
+```
+
+3. Use commands without repeating `--base-url`:
+
+```bash
+dash me
+dash query list
+dash --json datasource list
 ```
 
 ## Authentication and Configuration
@@ -95,7 +156,8 @@ dash --json --profile prod --base-url https://redash.example.com datasource list
 
 ### Config file
 
-- Path: `$(os.UserConfigDir())/dashcli/config.json`
+- macOS: `~/Library/Application Support/dashcli/config.json`
+- Linux: `~/.config/dashcli/config.json`
 
 Example:
 
