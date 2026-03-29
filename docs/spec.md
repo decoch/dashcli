@@ -48,14 +48,15 @@ Design a Go-based Redash CLI (`dashcli`) with the following primary goals.
 - `dashcli query create`
 - `dashcli query update <id>`
 - `dashcli query archive <id>`
-- `dashcli query results <id>`
+- `dashcli query result <id>`
+- `dashcli query-result get <id>`
+- `dashcli query-result create`
 - `dashcli job get <job-id>`
 - `dashcli job wait <job-id>`
 - `dashcli dashboard list`
 - `dashcli dashboard get <slug-or-id>`
 - `dashcli datasource list`
 - `dashcli datasource schema <id>`
-- `dashcli sql run`
 
 ## API/auth and config policy
 

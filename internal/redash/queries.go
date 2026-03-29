@@ -48,15 +48,6 @@ func (client *Client) ArchiveQuery(ctx context.Context, id string) error {
 	return client.deleteObject(ctx, fmt.Sprintf("/api/queries/%s", url.PathEscape(id)))
 }
 
-func (client *Client) GetQueryResults(ctx context.Context, id string) (map[string]any, error) {
-	return client.getObject(ctx, fmt.Sprintf("/api/queries/%s/results.json", url.PathEscape(id)))
-}
-
-func (client *Client) ExecuteSQL(ctx context.Context, dataSourceID int, query string, maxAge int) (map[string]any, error) {
-	body := map[string]any{
-		"query":          query,
-		"data_source_id": dataSourceID,
-		"max_age":        maxAge,
-	}
-	return client.postObject(ctx, "/api/query_results", body)
+func (client *Client) GetQueryCachedResult(ctx context.Context, id string) (map[string]any, error) {
+	return client.getObject(ctx, fmt.Sprintf("/api/queries/%s/results", url.PathEscape(id)))
 }

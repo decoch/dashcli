@@ -21,12 +21,13 @@ It is designed for script-friendly automation, clear command behavior, and secur
 - `dashcli query create`
 - `dashcli query update <id>`
 - `dashcli query archive <id>`
-- `dashcli query results <id>`
+- `dashcli query result <id>`
+- `dashcli query-result get <id>`
+- `dashcli query-result create`
 - `dashcli job get|wait`
 - `dashcli dashboard list|get`
 - `dashcli datasource list`
 - `dashcli datasource schema <id>`
-- `dashcli sql run`
 
 Run `dashcli --help` for full command and flag documentation.
 

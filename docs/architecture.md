@@ -12,15 +12,16 @@ internal/app/
   cmd_version.go          # version subcommand
   cmd_auth.go             # keyring auth commands
   cmd_query.go            # query subcommands
+  cmd_query_result.go     # query-result subcommands
   cmd_dashboard.go        # dashboard subcommands
   cmd_datasource.go       # datasource subcommands
   cmd_job.go              # job subcommands
-  cmd_sql.go              # ad-hoc SQL execution
   helpers.go              # shared output helpers
 
 internal/redash/
   client.go               # HTTP client + auth transport
   queries.go              # /api/queries
+  query_results.go        # /api/query_results
   dashboards.go           # /api/dashboards
   jobs.go                 # /api/jobs
   datasources.go          # /api/data_sources

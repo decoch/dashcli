@@ -205,13 +205,13 @@ func TestQueryArchive_Success(t *testing.T) {
 	}
 }
 
-func TestQueryResultsSQLRunAndSchema_JSON(t *testing.T) {
+func TestQueryResultAndQueryResultCreateAndSchema_JSON(t *testing.T) {
 	stubCredentials(t, "https://redash.example.com")
 
 	var lastBody map[string]any
 	stubDefaultTransport(t, func(request *http.Request) (*http.Response, error) {
 		switch request.URL.Path {
-		case "/api/queries/9/results.json":
+		case "/api/queries/9/results":
 			return appJSONResponse(http.StatusOK, `{"query_result":{"data":{"rows":[{"value":1}]}}}`), nil
 		case "/api/query_results":
 			if err := json.NewDecoder(request.Body).Decode(&lastBody); err != nil {
@@ -228,19 +228,19 @@ func TestQueryResultsSQLRunAndSchema_JSON(t *testing.T) {
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 
-	resultsCode := Run(context.Background(), []string{"--json", "query", "results", "9"}, stdout, stderr)
-	if resultsCode != exitcode.CodeSuccess {
-		t.Fatalf("query results code = %d, want %d", resultsCode, exitcode.CodeSuccess)
+	resultCode := Run(context.Background(), []string{"--json", "query", "result", "9"}, stdout, stderr)
+	if resultCode != exitcode.CodeSuccess {
+		t.Fatalf("query result code = %d, want %d", resultCode, exitcode.CodeSuccess)
 	}
 	if !bytes.Contains(stdout.Bytes(), []byte("\"query_result\"")) {
-		t.Fatalf("query results stdout = %q, want JSON response", stdout.String())
+		t.Fatalf("query result stdout = %q, want JSON response", stdout.String())
 	}
 
 	stdout.Reset()
 	stderr.Reset()
-	sqlCode := Run(context.Background(), []string{"--json", "sql", "run", "--datasource", "11", "--query", "select 1", "--max-age", "60"}, stdout, stderr)
-	if sqlCode != exitcode.CodeSuccess {
-		t.Fatalf("sql run code = %d, want %d", sqlCode, exitcode.CodeSuccess)
+	createCode := Run(context.Background(), []string{"--json", "query-result", "create", "--datasource", "11", "--query", "select 1", "--max-age", "60"}, stdout, stderr)
+	if createCode != exitcode.CodeSuccess {
+		t.Fatalf("query-result create code = %d, want %d", createCode, exitcode.CodeSuccess)
 	}
 	if lastBody["data_source_id"] != float64(11) {
 		t.Fatalf("data_source_id = %v, want %v", lastBody["data_source_id"], float64(11))
@@ -263,7 +263,7 @@ func TestQueryResultsSQLRunAndSchema_JSON(t *testing.T) {
 	}
 }
 
-func TestCreateAndSQLRun_RequiredFlags(t *testing.T) {
+func TestQueryCreate_AndQueryResultCreate_RequiredFlags(t *testing.T) {
 	stubCredentials(t, "https://redash.example.com")
 
 	stdout := &bytes.Buffer{}
@@ -275,9 +275,50 @@ func TestCreateAndSQLRun_RequiredFlags(t *testing.T) {
 
 	stdout.Reset()
 	stderr.Reset()
-	sqlCode := Run(context.Background(), []string{"sql", "run", "--datasource", "1"}, stdout, stderr)
-	if sqlCode == exitcode.CodeSuccess {
-		t.Fatalf("sql run code = %d, want non-success", sqlCode)
+	queryResultCode := Run(context.Background(), []string{"query-result", "create", "--datasource", "1"}, stdout, stderr)
+	if queryResultCode == exitcode.CodeSuccess {
+		t.Fatalf("query-result create code = %d, want non-success", queryResultCode)
+	}
+}
+
+func TestQueryResultGet_Success(t *testing.T) {
+	stubCredentials(t, "https://redash.example.com")
+
+	var requestMethod string
+	var requestPath string
+	stubDefaultTransport(t, func(request *http.Request) (*http.Response, error) {
+		requestMethod = request.Method
+		requestPath = request.URL.Path
+		return appJSONResponse(http.StatusOK, `{"query_result":{"id":42,"data":{"rows":[]}}}`), nil
+	})
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	code := Run(context.Background(), []string{"--json", "query-result", "get", "42"}, stdout, stderr)
+
+	if code != exitcode.CodeSuccess {
+		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeSuccess)
+	}
+	if requestMethod != http.MethodGet {
+		t.Fatalf("method = %q, want %q", requestMethod, http.MethodGet)
+	}
+	if requestPath != "/api/query_results/42" {
+		t.Fatalf("path = %q, want %q", requestPath, "/api/query_results/42")
+	}
+	if !bytes.Contains(stdout.Bytes(), []byte("\"query_result\"")) {
+		t.Fatalf("stdout = %q, want JSON response", stdout.String())
+	}
+}
+
+func TestQueryResultGet_RequiredArg(t *testing.T) {
+	stubCredentials(t, "https://redash.example.com")
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	code := Run(context.Background(), []string{"query-result", "get"}, stdout, stderr)
+
+	if code == exitcode.CodeSuccess {
+		t.Fatalf("Run() code = %d, want non-success", code)
 	}
 }
 

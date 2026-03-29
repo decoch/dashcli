@@ -204,7 +204,7 @@ func newQueryCmd(state *appState) *cobra.Command {
 	updateCmd.Flags().StringVar(&updateDescription, "description", "", "Query description")
 	queryCmd.AddCommand(updateCmd)
 
-	archiveCmd := &cobra.Command{
+	queryCmd.AddCommand(&cobra.Command{
 		Use:   "archive <id>",
 		Short: "Archive query",
 		Args:  cobra.ExactArgs(1),
@@ -221,30 +221,28 @@ func newQueryCmd(state *appState) *cobra.Command {
 			}
 			return nil
 		},
-	}
-	queryCmd.AddCommand(archiveCmd)
+	})
 
-	resultsCmd := &cobra.Command{
-		Use:   "results <id>",
-		Short: "Get query results",
+	queryCmd.AddCommand(&cobra.Command{
+		Use:   "result <id>",
+		Short: "Get cached result for a query",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := state.apiClient()
 			if err != nil {
 				return err
 			}
-			results, err := client.GetQueryResults(cmd.Context(), args[0])
+			result, err := client.GetQueryCachedResult(cmd.Context(), args[0])
 			if err != nil {
 				return exitcode.WrapRuntime(err)
 			}
 
-			if err := state.output().Print(results); err != nil {
+			if err := state.output().Print(result); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
 			return nil
 		},
-	}
-	queryCmd.AddCommand(resultsCmd)
+	})
 
 	return queryCmd
 }

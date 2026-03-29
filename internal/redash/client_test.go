@@ -122,7 +122,34 @@ func TestArchiveQuery_UsesDelete(t *testing.T) {
 	}
 }
 
-func TestExecuteSQL_RequestBody(t *testing.T) {
+func TestGetQueryResult_Path(t *testing.T) {
+	t.Parallel()
+
+	var gotMethod string
+	var gotPath string
+
+	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
+	if err != nil {
+		t.Fatalf("NewClient() error = %v", err)
+	}
+	client.httpClient = &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		gotMethod = request.Method
+		gotPath = request.URL.Path
+		return jsonResponse(http.StatusOK, `{"query_result":{"id":42}}`), nil
+	})}
+
+	if _, err := client.GetQueryResult(context.Background(), "42"); err != nil {
+		t.Fatalf("GetQueryResult() error = %v", err)
+	}
+	if gotMethod != http.MethodGet {
+		t.Fatalf("Method = %q, want %q", gotMethod, http.MethodGet)
+	}
+	if gotPath != "/api/query_results/42" {
+		t.Fatalf("Path = %q, want %q", gotPath, "/api/query_results/42")
+	}
+}
+
+func TestCreateQueryResult_RequestBody(t *testing.T) {
 	t.Parallel()
 
 	var gotPath string
@@ -140,9 +167,9 @@ func TestExecuteSQL_RequestBody(t *testing.T) {
 		return jsonResponse(http.StatusOK, `{"query_result":{"id":1}}`), nil
 	})}
 
-	response, err := client.ExecuteSQL(context.Background(), 9, "select 1", 10)
+	response, err := client.CreateQueryResult(context.Background(), 9, "select 1", 10)
 	if err != nil {
-		t.Fatalf("ExecuteSQL() error = %v", err)
+		t.Fatalf("CreateQueryResult() error = %v", err)
 	}
 	if gotPath != "/api/query_results" {
 		t.Fatalf("Path = %q, want %q", gotPath, "/api/query_results")

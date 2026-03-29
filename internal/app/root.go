@@ -96,7 +96,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newVersionCmd(state))
 	rootCmd.AddCommand(newAuthCmd(state))
 	rootCmd.AddCommand(newQueryCmd(state))
-	rootCmd.AddCommand(newSQLCmd(state))
+	rootCmd.AddCommand(newQueryResultCmd(state))
 	rootCmd.AddCommand(newJobCmd(state))
 	rootCmd.AddCommand(newDashboardCmd(state))
 	rootCmd.AddCommand(newDataSourceCmd(state))
