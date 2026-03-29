@@ -8,18 +8,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/99designs/keyring"
 	"github.com/spf13/cobra"
 
-	"github.com/decoch/dashcli/internal/config"
 	"github.com/decoch/dashcli/internal/exitcode"
 	"github.com/decoch/dashcli/internal/output"
 	"github.com/decoch/dashcli/internal/secrets"
 )
 
 var (
-	loadConfig = config.LoadDefault
 	lookupEnv  = os.LookupEnv
-	getSecret  = secrets.Get
+	getAPIKey  = secrets.GetAPIKey
+	getBaseURL = secrets.GetBaseURL
 )
 
 type rootFlags struct {
@@ -28,14 +28,20 @@ type rootFlags struct {
 	JSON    bool
 	Timeout time.Duration
 	Debug   bool
-	Profile string
 }
 
 type appState struct {
 	flags    *rootFlags
-	resolved config.Resolved
+	resolved resolvedConfig
 	stdout   io.Writer
 	stderr   io.Writer
+}
+
+type resolvedConfig struct {
+	BaseURL string
+	APIKey  string
+	Timeout time.Duration
+	Debug   bool
 }
 
 func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
@@ -55,33 +61,25 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 			if cmd.Name() == "version" || isAuthCommand(cmd) {
 				return nil
 			}
-			cfg, err := loadConfig()
+
+			resolvedBaseURL, err := resolveBaseURL(state.flags.BaseURL)
 			if err != nil {
-				return exitcode.WrapRuntime(err)
+				return err
 			}
-			resolved, err := config.Resolve(config.ResolveInput{
-				Flags: config.Flags{
-					BaseURL: state.flags.BaseURL,
-					APIKey:  state.flags.APIKey,
-					Profile: state.flags.Profile,
-					Timeout: state.flags.Timeout,
-					Debug:   state.flags.Debug,
-				},
-				Config:    cfg,
-				LookupEnv: lookupEnv,
-				GetSecret: getSecret,
-			})
+			resolvedAPIKey, err := resolveAPIKey(state.flags.APIKey)
 			if err != nil {
-				var runtimeErr *config.RuntimeError
-				if errors.As(err, &runtimeErr) {
-					return exitcode.WrapRuntime(err)
-				}
-				return exitcode.WrapUsage(err)
+				return err
 			}
-			state.resolved = resolved
+
+			state.resolved = resolvedConfig{
+				BaseURL: resolvedBaseURL,
+				APIKey:  resolvedAPIKey,
+				Timeout: state.flags.Timeout,
+				Debug:   state.flags.Debug,
+			}
 
 			flagAPIKey := strings.TrimSpace(state.flags.APIKey)
-			if flagAPIKey != "" && resolved.APIKey == flagAPIKey {
+			if flagAPIKey != "" && resolvedAPIKey == flagAPIKey {
 				_, _ = fmt.Fprintln(state.stderr, "Warning: passing API key via --api-key is insecure; prefer keyring or environment variable")
 			}
 
@@ -94,7 +92,6 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.PersistentFlags().BoolVar(&flags.JSON, "json", false, "Print JSON output")
 	rootCmd.PersistentFlags().DurationVar(&flags.Timeout, "timeout", 10*time.Second, "HTTP timeout")
 	rootCmd.PersistentFlags().BoolVar(&flags.Debug, "debug", false, "Enable debug logging")
-	rootCmd.PersistentFlags().StringVar(&flags.Profile, "profile", "", "Profile name")
 
 	rootCmd.AddCommand(newVersionCmd(state))
 	rootCmd.AddCommand(newAuthCmd(state))
@@ -105,6 +102,42 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	rootCmd.AddCommand(newDataSourceCmd(state))
 
 	return rootCmd
+}
+
+func resolveBaseURL(flagValue string) (string, error) {
+	baseURL := strings.TrimSpace(flagValue)
+	if baseURL == "" {
+		secretValue, err := getBaseURL()
+		if err == nil {
+			baseURL = strings.TrimSpace(secretValue)
+		} else if !errors.Is(err, keyring.ErrKeyNotFound) {
+			return "", exitcode.WrapRuntime(err)
+		}
+	}
+	if baseURL == "" {
+		if value, ok := lookupEnv("REDASH_BASE_URL"); ok {
+			baseURL = strings.TrimSpace(value)
+		}
+	}
+	return baseURL, nil
+}
+
+func resolveAPIKey(flagValue string) (string, error) {
+	apiKey := strings.TrimSpace(flagValue)
+	if apiKey == "" {
+		secretValue, err := getAPIKey()
+		if err == nil {
+			apiKey = strings.TrimSpace(secretValue)
+		} else if !errors.Is(err, keyring.ErrKeyNotFound) {
+			return "", exitcode.WrapRuntime(err)
+		}
+	}
+	if apiKey == "" {
+		if value, ok := lookupEnv("REDASH_API_KEY"); ok {
+			apiKey = strings.TrimSpace(value)
+		}
+	}
+	return apiKey, nil
 }
 
 func isAuthCommand(cmd *cobra.Command) bool {

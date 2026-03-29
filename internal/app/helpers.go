@@ -11,10 +11,10 @@ import (
 
 func (state *appState) apiClient() (*redash.Client, error) {
 	if strings.TrimSpace(state.resolved.BaseURL) == "" {
-		return nil, exitcode.Usagef("base URL is required; set --base-url, REDASH_BASE_URL, or profile base_url")
+		return nil, exitcode.Usagef("base URL is required; set --base-url, keyring base URL, or REDASH_BASE_URL")
 	}
 	if strings.TrimSpace(state.resolved.APIKey) == "" {
-		return nil, exitcode.Usagef("API key is required; set --api-key, profile api_key_env, or REDASH_API_KEY")
+		return nil, exitcode.Usagef("API key is required; set --api-key, keyring API key, or REDASH_API_KEY")
 	}
 
 	client, err := redash.NewClient(state.resolved.BaseURL, state.resolved.APIKey, state.resolved.Timeout, state.resolved.Debug)
@@ -91,4 +91,3 @@ func extractJobObject(response map[string]any) map[string]any {
 	}
 	return response
 }
-

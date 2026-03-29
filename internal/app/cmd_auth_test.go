@@ -12,74 +12,25 @@ import (
 	"github.com/decoch/dashcli/internal/exitcode"
 )
 
-func TestAuthStatus_NotFoundIsSuccess(t *testing.T) {
-	previousGet := authGetSecret
-	previousInput := authInput
-	authGetSecret = func(profile string) (string, error) {
-		if profile != "default" {
-			t.Fatalf("profile = %q, want %q", profile, "default")
-		}
-		return "", keyring.ErrKeyNotFound
-	}
-	authInput = strings.NewReader("")
-	t.Cleanup(func() {
-		authGetSecret = previousGet
-		authInput = previousInput
-	})
-
-	stdout := &bytes.Buffer{}
-	stderr := &bytes.Buffer{}
-	code := Run(context.Background(), []string{"auth", "status"}, stdout, stderr)
-
-	if code != exitcode.CodeSuccess {
-		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeSuccess)
-	}
-	if got, want := stdout.String(), "No API key stored for profile default\n"; got != want {
-		t.Fatalf("stdout = %q, want %q", got, want)
-	}
-	if stderr.Len() != 0 {
-		t.Fatalf("stderr = %q, want empty", stderr.String())
-	}
-}
-
-func TestAuthStatus_ProfileFlag(t *testing.T) {
-	previousGet := authGetSecret
-	authGetSecret = func(profile string) (string, error) {
-		if profile != "prod" {
-			t.Fatalf("profile = %q, want %q", profile, "prod")
-		}
-		return "secret", nil
-	}
-	t.Cleanup(func() {
-		authGetSecret = previousGet
-	})
-
-	stdout := &bytes.Buffer{}
-	stderr := &bytes.Buffer{}
-	code := Run(context.Background(), []string{"--profile", "prod", "auth", "status"}, stdout, stderr)
-
-	if code != exitcode.CodeSuccess {
-		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeSuccess)
-	}
-	if got, want := stdout.String(), "API key is set for profile prod\n"; got != want {
-		t.Fatalf("stdout = %q, want %q", got, want)
-	}
-}
-
-func TestAuthSet_StoresForDefaultProfile(t *testing.T) {
-	previousSet := authSetSecret
+func TestAuthSet_StoresBaseURLAndAPIKey(t *testing.T) {
+	previousSetBaseURL := authSetBaseURL
+	previousSetAPIKey := authSetAPIKey
 	previousInput := authInput
 
-	calledProfile := ""
-	calledKey := ""
-	authSetSecret = func(profile, apiKey string) error {
-		calledProfile = profile
-		calledKey = apiKey
+	calledBaseURL := ""
+	calledAPIKey := ""
+	authSetBaseURL = func(baseURL string) error {
+		calledBaseURL = baseURL
 		return nil
 	}
-	authInput = strings.NewReader("abc123\n")
+	authSetAPIKey = func(apiKey string) error {
+		calledAPIKey = apiKey
+		return nil
+	}
+	authInput = strings.NewReader("https://redash.example.com\nabc123\n")
 	t.Cleanup(func() {
-		authSetSecret = previousSet
+		authSetBaseURL = previousSetBaseURL
+		authSetAPIKey = previousSetAPIKey
 		authInput = previousInput
 	})
 
@@ -90,50 +41,93 @@ func TestAuthSet_StoresForDefaultProfile(t *testing.T) {
 	if code != exitcode.CodeSuccess {
 		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeSuccess)
 	}
-	if calledProfile != "default" {
-		t.Fatalf("set profile = %q, want %q", calledProfile, "default")
+	if calledBaseURL != "https://redash.example.com" {
+		t.Fatalf("baseURL = %q, want %q", calledBaseURL, "https://redash.example.com")
 	}
-	if calledKey != "abc123" {
-		t.Fatalf("set apiKey = %q, want %q", calledKey, "abc123")
+	if calledAPIKey != "abc123" {
+		t.Fatalf("apiKey = %q, want %q", calledAPIKey, "abc123")
 	}
-	if got, want := stdout.String(), "API key stored for profile default\n"; got != want {
-		t.Fatalf("stdout = %q, want %q", got, want)
+	if !strings.Contains(stdout.String(), "Credentials stored in keyring\n") {
+		t.Fatalf("stdout = %q, want success message", stdout.String())
 	}
 }
 
-func TestAuthDelete_UsesProfileFlag(t *testing.T) {
-	previousDelete := authDeleteSecret
-	calledProfile := ""
-	authDeleteSecret = func(profile string) error {
-		calledProfile = profile
-		return nil
-	}
+func TestAuthSet_RejectsHTTPBaseURL(t *testing.T) {
+	previousInput := authInput
+	authInput = strings.NewReader("http://redash.example.com\nabc123\n")
 	t.Cleanup(func() {
-		authDeleteSecret = previousDelete
+		authInput = previousInput
 	})
 
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
-	code := Run(context.Background(), []string{"--profile", "stg", "auth", "delete"}, stdout, stderr)
+	code := Run(context.Background(), []string{"auth", "set"}, stdout, stderr)
+
+	if code != exitcode.CodeUsage {
+		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeUsage)
+	}
+}
+
+func TestAuthDelete_SuccessWhenKeysMissing(t *testing.T) {
+	previousDeleteBaseURL := authDeleteBaseURL
+	previousDeleteAPIKey := authDeleteAPIKey
+	authDeleteBaseURL = func() error {
+		return keyring.ErrKeyNotFound
+	}
+	authDeleteAPIKey = func() error {
+		return keyring.ErrKeyNotFound
+	}
+	t.Cleanup(func() {
+		authDeleteBaseURL = previousDeleteBaseURL
+		authDeleteAPIKey = previousDeleteAPIKey
+	})
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	code := Run(context.Background(), []string{"auth", "delete"}, stdout, stderr)
 
 	if code != exitcode.CodeSuccess {
 		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeSuccess)
 	}
-	if calledProfile != "stg" {
-		t.Fatalf("delete profile = %q, want %q", calledProfile, "stg")
+	if got, want := stdout.String(), "Credentials removed from keyring\n"; !strings.Contains(got, want) {
+		t.Fatalf("stdout = %q, want message containing %q", got, want)
 	}
-	if got, want := stdout.String(), "API key removed for profile stg\n"; got != want {
+}
+
+func TestAuthStatus_AllMissing(t *testing.T) {
+	previousGetBaseURL := authGetBaseURL
+	previousGetAPIKey := authGetAPIKey
+	authGetBaseURL = func() (string, error) {
+		return "", keyring.ErrKeyNotFound
+	}
+	authGetAPIKey = func() (string, error) {
+		return "", keyring.ErrKeyNotFound
+	}
+	t.Cleanup(func() {
+		authGetBaseURL = previousGetBaseURL
+		authGetAPIKey = previousGetAPIKey
+	})
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	code := Run(context.Background(), []string{"auth", "status"}, stdout, stderr)
+
+	if code != exitcode.CodeSuccess {
+		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeSuccess)
+	}
+	want := "No base URL stored\nNo API key stored\n"
+	if got := stdout.String(); got != want {
 		t.Fatalf("stdout = %q, want %q", got, want)
 	}
 }
 
 func TestAuthStatus_RuntimeError(t *testing.T) {
-	previousGet := authGetSecret
-	authGetSecret = func(profile string) (string, error) {
+	previousGetBaseURL := authGetBaseURL
+	authGetBaseURL = func() (string, error) {
 		return "", errors.New("backend failure")
 	}
 	t.Cleanup(func() {
-		authGetSecret = previousGet
+		authGetBaseURL = previousGetBaseURL
 	})
 
 	stdout := &bytes.Buffer{}

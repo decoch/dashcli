@@ -3,9 +3,11 @@ package app
 import (
 	"bytes"
 	"context"
+	"errors"
 	"testing"
 
-	"github.com/decoch/dashcli/internal/config"
+	"github.com/99designs/keyring"
+
 	"github.com/decoch/dashcli/internal/exitcode"
 )
 
@@ -32,16 +34,21 @@ func TestRun_Version(t *testing.T) {
 }
 
 func TestRun_MeRequiresCredentials(t *testing.T) {
-	previousLoadConfig := loadConfig
+	previousGetBaseURL := getBaseURL
+	previousGetAPIKey := getAPIKey
 	previousLookupEnv := lookupEnv
-	loadConfig = func() (config.File, error) {
-		return config.File{}, nil
+	getBaseURL = func() (string, error) {
+		return "", keyring.ErrKeyNotFound
+	}
+	getAPIKey = func() (string, error) {
+		return "", keyring.ErrKeyNotFound
 	}
 	lookupEnv = func(string) (string, bool) {
 		return "", false
 	}
 	t.Cleanup(func() {
-		loadConfig = previousLoadConfig
+		getBaseURL = previousGetBaseURL
+		getAPIKey = previousGetAPIKey
 		lookupEnv = previousLookupEnv
 	})
 
@@ -57,5 +64,28 @@ func TestRun_MeRequiresCredentials(t *testing.T) {
 	}
 	if stderr.Len() == 0 {
 		t.Fatal("stderr is empty, want usage error output")
+	}
+}
+
+func TestRun_MeRuntimeErrorWhenKeyringFails(t *testing.T) {
+	previousGetBaseURL := getBaseURL
+	previousGetAPIKey := getAPIKey
+	getBaseURL = func() (string, error) {
+		return "", errors.New("keyring unavailable")
+	}
+	getAPIKey = func() (string, error) {
+		return "", keyring.ErrKeyNotFound
+	}
+	t.Cleanup(func() {
+		getBaseURL = previousGetBaseURL
+		getAPIKey = previousGetAPIKey
+	})
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	code := Run(context.Background(), []string{"me"}, stdout, stderr)
+
+	if code != exitcode.CodeRuntime {
+		t.Fatalf("Run() code = %d, want %d", code, exitcode.CodeRuntime)
 	}
 }

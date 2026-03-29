@@ -2,35 +2,64 @@ package secrets
 
 import "github.com/99designs/keyring"
 
-func Set(profile, apiKey string) error {
+const (
+	keyAPIKey  = "api_key"
+	keyBaseURL = "base_url"
+)
+
+func SetAPIKey(apiKey string) error {
+	return setValue(keyAPIKey, apiKey)
+}
+
+func GetAPIKey() (string, error) {
+	return getValue(keyAPIKey)
+}
+
+func DeleteAPIKey() error {
+	return deleteValue(keyAPIKey)
+}
+
+func SetBaseURL(baseURL string) error {
+	return setValue(keyBaseURL, baseURL)
+}
+
+func GetBaseURL() (string, error) {
+	return getValue(keyBaseURL)
+}
+
+func DeleteBaseURL() error {
+	return deleteValue(keyBaseURL)
+}
+
+func setValue(key, value string) error {
 	ring, err := open()
 	if err != nil {
 		return err
 	}
 	return ring.Set(keyring.Item{
-		Key:  profile,
-		Data: []byte(apiKey),
+		Key:  key,
+		Data: []byte(value),
 	})
 }
 
-func Get(profile string) (string, error) {
+func getValue(key string) (string, error) {
 	ring, err := open()
 	if err != nil {
 		return "", err
 	}
-	item, err := ring.Get(profile)
+	item, err := ring.Get(key)
 	if err != nil {
 		return "", err
 	}
 	return string(item.Data), nil
 }
 
-func Delete(profile string) error {
+func deleteValue(key string) error {
 	ring, err := open()
 	if err != nil {
 		return err
 	}
-	return ring.Remove(profile)
+	return ring.Remove(key)
 }
 
 func open() (keyring.Keyring, error) {

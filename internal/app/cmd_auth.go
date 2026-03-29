@@ -1,44 +1,77 @@
 package app
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/99designs/keyring"
 	"github.com/spf13/cobra"
 
 	"github.com/decoch/dashcli/internal/exitcode"
+	"github.com/decoch/dashcli/internal/redash"
 	"github.com/decoch/dashcli/internal/secrets"
 )
 
 var (
-	authSetSecret              = secrets.Set
-	authGetSecret              = secrets.Get
-	authDeleteSecret           = secrets.Delete
-	authInput        io.Reader = os.Stdin
+	authSetAPIKey               = secrets.SetAPIKey
+	authGetAPIKey               = secrets.GetAPIKey
+	authDeleteAPIKey            = secrets.DeleteAPIKey
+	authSetBaseURL              = secrets.SetBaseURL
+	authGetBaseURL              = secrets.GetBaseURL
+	authDeleteBaseURL           = secrets.DeleteBaseURL
+	authInput         io.Reader = os.Stdin
 )
 
 func newAuthCmd(state *appState) *cobra.Command {
 	authCmd := &cobra.Command{
 		Use:   "auth",
-		Short: "Manage API keys in keyring",
+		Short: "Manage credentials in keyring",
 	}
 
 	authCmd.AddCommand(&cobra.Command{
 		Use:   "set",
-		Short: "Store API key for profile",
+		Short: "Store base URL and API key",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			profile := profileNameFromGlobalFlag(state.flags.Profile)
+			reader := bufio.NewReader(authInput)
+
+			if err := state.output().PrintText("Base URL: "); err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+			baseURL, err := reader.ReadString('\n')
+			if err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+			baseURL = strings.TrimSpace(baseURL)
+			if baseURL == "" {
+				return exitcode.Usagef("base URL cannot be empty")
+			}
+			if _, err := redash.NewClient(baseURL, "dummy", time.Second, false); err != nil {
+				return exitcode.WrapUsage(err)
+			}
+
+			if err := state.output().PrintText("API key: "); err != nil {
+				return exitcode.WrapRuntime(err)
+			}
 			var apiKey string
-			if _, err := fmt.Fscan(authInput, &apiKey); err != nil {
+			if _, err := fmt.Fscan(reader, &apiKey); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
-			if err := authSetSecret(profile, strings.TrimSpace(apiKey)); err != nil {
+			apiKey = strings.TrimSpace(apiKey)
+			if apiKey == "" {
+				return exitcode.Usagef("API key cannot be empty")
+			}
+
+			if err := authSetBaseURL(baseURL); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
-			if err := state.output().PrintText("API key stored for profile %s\n", profile); err != nil {
+			if err := authSetAPIKey(apiKey); err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+			if err := state.output().PrintText("Credentials stored in keyring\n"); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
 			return nil
@@ -47,13 +80,15 @@ func newAuthCmd(state *appState) *cobra.Command {
 
 	authCmd.AddCommand(&cobra.Command{
 		Use:   "delete",
-		Short: "Delete API key for profile",
+		Short: "Delete base URL and API key",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			profile := profileNameFromGlobalFlag(state.flags.Profile)
-			if err := authDeleteSecret(profile); err != nil {
+			if err := authDeleteBaseURL(); err != nil && err != keyring.ErrKeyNotFound {
 				return exitcode.WrapRuntime(err)
 			}
-			if err := state.output().PrintText("API key removed for profile %s\n", profile); err != nil {
+			if err := authDeleteAPIKey(); err != nil && err != keyring.ErrKeyNotFound {
+				return exitcode.WrapRuntime(err)
+			}
+			if err := state.output().PrintText("Credentials removed from keyring\n"); err != nil {
 				return exitcode.WrapRuntime(err)
 			}
 			return nil
@@ -62,33 +97,62 @@ func newAuthCmd(state *appState) *cobra.Command {
 
 	authCmd.AddCommand(&cobra.Command{
 		Use:   "status",
-		Short: "Show API key status for profile",
+		Short: "Show credential status",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			profile := profileNameFromGlobalFlag(state.flags.Profile)
-			_, err := authGetSecret(profile)
-			if err == nil {
-				if printErr := state.output().PrintText("API key is set for profile %s\n", profile); printErr != nil {
+			baseURLSet, err := isBaseURLSet()
+			if err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+			apiKeySet, err := isAPIKeySet()
+			if err != nil {
+				return exitcode.WrapRuntime(err)
+			}
+
+			if baseURLSet {
+				if printErr := state.output().PrintText("Base URL is set\n"); printErr != nil {
 					return exitcode.WrapRuntime(printErr)
 				}
-				return nil
-			}
-			if err == keyring.ErrKeyNotFound {
-				if printErr := state.output().PrintText("No API key stored for profile %s\n", profile); printErr != nil {
+			} else {
+				if printErr := state.output().PrintText("No base URL stored\n"); printErr != nil {
 					return exitcode.WrapRuntime(printErr)
 				}
-				return nil
 			}
-			return exitcode.WrapRuntime(err)
+
+			if apiKeySet {
+				if printErr := state.output().PrintText("API key is set\n"); printErr != nil {
+					return exitcode.WrapRuntime(printErr)
+				}
+			} else {
+				if printErr := state.output().PrintText("No API key stored\n"); printErr != nil {
+					return exitcode.WrapRuntime(printErr)
+				}
+			}
+
+			return nil
 		},
 	})
 
 	return authCmd
 }
 
-func profileNameFromGlobalFlag(profile string) string {
-	trimmed := strings.TrimSpace(profile)
-	if trimmed == "" {
-		return "default"
+func isBaseURLSet() (bool, error) {
+	_, err := authGetBaseURL()
+	if err == nil {
+		return true, nil
 	}
-	return trimmed
+	if err == keyring.ErrKeyNotFound {
+		return false, nil
+	}
+	return false, err
+}
+
+func isAPIKeySet() (bool, error) {
+	_, err := authGetAPIKey()
+	if err == nil {
+		return true, nil
+	}
+	if err == keyring.ErrKeyNotFound {
+		return false, nil
+	}
+	return false, err
 }
