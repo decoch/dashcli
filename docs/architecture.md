@@ -18,7 +18,7 @@ internal/app/
 
 internal/redash/
   client.go               # HTTP client + auth transport
-  me.go                   # current-user API wrapper
+  me.go                   # /api/me
   queries.go              # /api/queries
   dashboards.go           # /api/dashboards
   jobs.go                 # /api/jobs
