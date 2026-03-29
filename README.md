@@ -14,9 +14,13 @@ Planned initial commands include:
 
 - `dash version`
 - `dash me`
-- `dash query list|get|run`
-- `dash job get|wait`
-- `dash dashboard list|get`
+- `dash query list`
+- `dash query get <id>`
+- `dash query run <id>`
+- `dash job get <job-id>`
+- `dash job wait <job-id>`
+- `dash dashboard list`
+- `dash dashboard get <slug-or-id>`
 - `dash datasource list`
 
 ## Documentation
