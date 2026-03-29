@@ -11,7 +11,6 @@ internal/app/
   root.go                 # root command + global flags
   cmd_version.go          # version subcommand
   cmd_auth.go             # keyring auth commands
-  cmd_me.go               # current-user subcommand
   cmd_query.go            # query subcommands
   cmd_dashboard.go        # dashboard subcommands
   cmd_datasource.go       # datasource subcommands
@@ -21,7 +20,6 @@ internal/app/
 
 internal/redash/
   client.go               # HTTP client + auth transport
-  me.go                   # /api/me
   queries.go              # /api/queries
   dashboards.go           # /api/dashboards
   jobs.go                 # /api/jobs

@@ -161,33 +161,6 @@ func TestExecuteSQL_RequestBody(t *testing.T) {
 	}
 }
 
-func TestMe_FallbackToUsersMe(t *testing.T) {
-	t.Parallel()
-
-	client, err := NewClient("https://redash.example.com", "test-key", "", time.Second)
-	if err != nil {
-		t.Fatalf("NewClient() error = %v", err)
-	}
-	client.httpClient = &http.Client{Transport: roundTripFunc(func(request *http.Request) (*http.Response, error) {
-		switch request.URL.Path {
-		case "/api/me":
-			return jsonResponse(http.StatusNotFound, `{"message":"not found"}`), nil
-		case "/api/users/me":
-			return jsonResponse(http.StatusOK, `{"id":10,"name":"Alice"}`), nil
-		default:
-			return jsonResponse(http.StatusNotFound, `{}`), nil
-		}
-	})}
-
-	me, err := client.Me(context.Background())
-	if err != nil {
-		t.Fatalf("Me() error = %v", err)
-	}
-	if me["name"] != "Alice" {
-		t.Fatalf("Me().name = %v, want %v", me["name"], "Alice")
-	}
-}
-
 func TestAPIError_MessageParsing(t *testing.T) {
 	t.Parallel()
 

@@ -17,7 +17,6 @@ It is designed for script-friendly automation, clear command behavior, and secur
 
 - `dashcli version`
 - `dashcli auth set|delete|status`
-- `dashcli me`
 - `dashcli query list|get|run`
 - `dashcli query create`
 - `dashcli query update <id>`
@@ -91,7 +90,6 @@ dash auth set
 # - API key
 
 # 2. Use
-dash me
 dash query list
 dash --json datasource list
 ```

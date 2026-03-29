@@ -50,7 +50,6 @@ Extracted architecture patterns:
 - `dashcli auth set`
 - `dashcli auth delete`
 - `dashcli auth status`
-- `dashcli me`
 - `dashcli query list`
 - `dashcli query get <id>`
 - `dashcli query run <id>`
@@ -88,8 +87,6 @@ If `--api-key` is used and wins resolution, print a warning on stderr about inse
 - `dashcli auth set`: prompts for base URL and API key, then stores both in OS keyring.
 - `dashcli auth delete`: removes stored base URL and API key from OS keyring.
 - `dashcli auth status`: prints whether base URL and API key are stored; key-not-found is a normal success state.
-- `dashcli me`: calls the current-user endpoint and prints a compact user summary in text mode (`id`, `name`, `email`, `is_admin`); `--json` prints the API response payload.
-
 ## Output policy
 
 - Default: human-readable text
