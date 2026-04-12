@@ -6,7 +6,7 @@ require github.com/spf13/cobra v1.10.2
 
 require github.com/99designs/keyring v1.2.2
 
-require golang.org/x/term v0.41.0
+require golang.org/x/term v0.42.0
 
 require (
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -17,5 +17,5 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 )
